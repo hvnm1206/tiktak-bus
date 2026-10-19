@@ -121,6 +121,42 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 16px; }
 .btn { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 14px; font-weight: 600; cursor: pointer; min-height: 48px; }
 .btn:hover { border-color: var(--accent); }
+/* Gần tôi */
+.near-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.near-head h2 { margin: 0; font-size: 1.1em; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.big-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.big-actions .btn { min-height: 56px; font-size: 1em; }
+.stop-card { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.stop-card:first-of-type { border-top: 0; padding-top: 0; }
+.stop-card .t { font-weight: 700; margin: 0; }
+.stop-card .d { color: var(--ink-2); font-size: .85em; margin: 0; }
+.route-line { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
+.route-line p { margin: 0; }
+/* Đang đi */
+.trip { position: fixed; inset: 0; z-index: 30; background: var(--bg); overflow-y: auto;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.trip-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.trip-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.trip-progress { display: flex; gap: 6px; }
+.trip-progress span { flex: 1; height: 8px; border-radius: 4px; background: var(--line); }
+.trip-progress span.done { background: var(--walk); }
+.trip-progress span.cur { background: var(--accent); }
+.trip-card { background: var(--surface); border: 2px solid var(--accent); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.trip-step { color: var(--ink-2); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; font-size: .8em; margin: 0; }
+.trip-title { font-size: 1.45em; font-weight: 800; line-height: 1.3; margin: 0; text-wrap: balance; }
+.trip-big { font-size: 2.6em; font-weight: 800; line-height: 1.1; margin: 0; color: var(--accent); font-variant-numeric: tabular-nums; }
+.trip-note { margin: 0; color: var(--ink-2); }
+.trip-alert { background: var(--warn-bg); color: var(--warn-fg); border-radius: 12px; padding: 12px 14px; font-weight: 700; margin: 0; }
+.trip-done { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--walk); }
+.ride-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ride-list li { padding: 8px 12px; border-radius: 10px; color: var(--ink-2); }
+.ride-list li.cur { background: var(--surface-2); color: var(--ink); font-weight: 700; }
+.ride-list li.dest { color: var(--accent); font-weight: 800; }
+.trip-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.trip-btns .btn { min-height: 56px; }
+.trip-btns .wide { grid-column: 1 / -1; }
+.gps-state { font-size: .8em; color: var(--ink-2); margin: 0; }
 .walkonly { background: var(--ok-bg); color: var(--ok-fg); border-radius: 14px; padding: 14px 16px; margin: 0; font-weight: 600; }
 
 /* Stop / route lookup */
@@ -157,6 +193,11 @@ footer p { margin: 0; }
 
   <!-- CHỈ ĐƯỜNG -->
   <section id="view-plan" class="wrap" style="gap:18px">
+    <div class="panel" id="near">
+      <div class="near-head"><h2>Gần tôi</h2><button class="btn" id="near-btn">Xem trạm gần tôi</button></div>
+      <p class="hint" id="near-hint">Bấm để xem trạm gần nhất và các xe đi qua. App chỉ dùng vị trí trên máy bạn, không gửi đi đâu.</p>
+      <div id="near-out"></div>
+    </div>
     <div class="panel">
       <div class="points">
         <div class="stack">
@@ -220,6 +261,9 @@ footer p { margin: 0; }
     <p>Dữ liệu 163 tuyến, 4.969 trạm lấy từ Timbus, nhập ngày 18/10/2026. Lộ trình có thể đã thay đổi.</p>
     <p>Khoảng cách đi bộ tính theo đường thẳng, đường thực tế thường dài hơn. App không báo giờ xe đến; giờ chạy là giờ xuất bến đầu và cuối tại đầu tuyến.</p>
   </footer>
+</div>
+<div class="trip" id="trip" hidden role="dialog" aria-label="Đang đi">
+  <div class="trip-inner" id="trip-inner"></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -710,7 +754,7 @@ footer p { margin: 0; }
       return '<article class="opt' + (oi === 0 ? ' best' : '') + '">' +
         '<div class="opt-top">' + top + '<span class="sum">' + sum + '</span>' + (oi === 0 ? '<span class="tag">Gợi ý</span>' : '') + '</div>' +
         '<ol class="steps">' + steps.join('') + '</ol>' +
-        '<div class="actions"><button class="btn" data-speak="' + oi + '">Đọc to</button><button class="btn" data-share="' + oi + '">Gửi cho người thân</button></div>' +
+        '<div class="actions"><button class="btn primary" data-start="' + oi + '">Bắt đầu đi</button><button class="btn" data-speak="' + oi + '">Đọc to</button><button class="btn" data-share="' + oi + '">Gửi cho người thân</button></div>' +
         '<div id="copy-' + oi + '"></div></article>';
     }).join('');
 
@@ -729,6 +773,9 @@ footer p { margin: 0; }
     });
     out.querySelectorAll('[data-speak]').forEach(function (b) {
       b.onclick = function () { speak(spokenText(res.options[+b.dataset.speak], from, to)); };
+    });
+    out.querySelectorAll('[data-start]').forEach(function (b) {
+      b.onclick = function () { startTrip(res.options[+b.dataset.start], from, to); };
     });
   }
 
@@ -799,6 +846,219 @@ footer p { margin: 0; }
     };
     inp._syncClear = sync;
   });
+
+
+  // ================= VỊ TRÍ =================
+  var myPos = null;
+  function getPos(ok, fail) {
+    if (!('geolocation' in navigator)) { fail && fail('nogeo'); return; }
+    navigator.geolocation.getCurrentPosition(function (p) {
+      myPos = [p.coords.latitude, p.coords.longitude]; ok(myPos, p.coords.accuracy);
+    }, function (e) { fail && fail(e && e.code); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+  }
+  function sideHint(name) {
+    var n = String(name || '');
+    if (/đối diện|đ\/d/i.test(n)) return 'Trạm ở phía đối diện đường';
+    if (/cột sau/i.test(n)) return 'Cột trạm phía sau';
+    if (/cột trước/i.test(n)) return 'Cột trạm phía trước';
+    return '';
+  }
+
+  // ================= GẦN TÔI =================
+  function renderNear(pos) {
+    var out = $('near-out'), list = eng.near(pos, 700), seen = {}, stops = [];
+    for (var i = 0; i < list.length && stops.length < 3; i++) {
+      var id = list[i][0], nm = clean(data.stops[id][0]), key = E.norm(nm);
+      if (seen[key]) continue; seen[key] = 1;
+      var routes = eng.routesAt(id, 25);
+      if (!routes.length) continue;
+      stops.push({ id: id, name: nm, raw: data.stops[id][0], d: list[i][1], routes: routes });
+    }
+    var now = new Date();
+    function rank(r) { var t = eng.service(r.routeId, r.dir, now).state; return t === 'running' ? 0 : t === 'ending' ? 1 : t === 'notyet' ? 2 : 3; }
+    function shortStatus(sv) {
+      if (!sv || sv.state === 'unknown') return '';
+      if (sv.state === 'running') return '<span style="color:var(--ok-fg)">đang chạy</span>';
+      if (sv.state === 'ending') return '<span style="color:var(--warn-fg)">sắp hết chuyến (' + sv.last + ')</span>';
+      if (sv.state === 'notyet') return 'chạy từ ' + sv.first;
+      return '<span style="color:var(--stop-fg)">hết chuyến</span>';
+    }
+    var actions = '<div class="big-actions"><button class="btn primary" id="near-go">Đi đâu? Tìm đường từ đây</button>' +
+      (saved.length ? '<button class="btn" id="near-home">Về ' + esc(saved[0].label) + '</button>' : '<button class="btn" id="near-save">Lưu chỗ hay đi (Nhà…)</button>') + '</div>';
+    if (!stops.length) {
+      out.innerHTML = '<p class="err">Không có trạm xe buýt nào trong khoảng 700 m quanh bạn.</p>' + actions;
+    } else {
+      out.innerHTML = stops.map(function (st) {
+        var side = sideHint(st.raw);
+        return '<div class="stop-card"><p class="t">' + esc(st.name) + '</p>' +
+          '<p class="d">Cách khoảng ' + m(st.d) + (side ? ' · ' + side : '') + ' · <a class="link" href="' + mapLink(data.stops[st.id].slice(1)) + '" target="_blank" rel="noopener">Bản đồ</a></p>' +
+          st.routes.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (r, ri) {
+            var sv = eng.service(r.routeId, r.dir, now);
+            return '<div class="route-line"' + (ri >= 4 ? ' data-more hidden' : '') + '><span class="sign sm">' + esc(r.code) + '</span>' +
+              '<p><b>→ ' + esc(r.toward) + '</b> <span class="d">· ' + shortStatus(sv) + '</span></p></div>';
+          }).join('') + (st.routes.length > 4 ? '<button class="link" data-showmore>Xem thêm ' + (st.routes.length - 4) + ' tuyến</button>' : '') +
+          '</div>';
+      }).join('') + actions;
+    }
+    out.querySelectorAll('[data-showmore]').forEach(function (b) {
+      b.onclick = function () { b.parentNode.querySelectorAll('[data-more]').forEach(function (x) { x.hidden = false; }); b.remove(); };
+    });
+    $('near-hint').hidden = true;
+    $('near-btn').textContent = 'Cập nhật vị trí';
+    $('near-go').onclick = function () {
+      $('from').value = 'Vị trí của tôi'; if ($('from')._syncClear) $('from')._syncClear(); sel.from = { name: 'Vị trí của tôi', pos: pos };
+      $('to').value = ''; sel.to = null; if ($('to')._syncClear) $('to')._syncClear();
+      $('to').focus(); $('to').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    if ($('near-home')) $('near-home').onclick = function () {
+      var h = saved[0];
+      $('from').value = 'Vị trí của tôi'; sel.from = { name: 'Vị trí của tôi', pos: pos };
+      $('to').value = h.name; sel.to = { name: h.name, pos: h.pos };
+      ['from', 'to'].forEach(function (k) { if ($(k)._syncClear) $(k)._syncClear(); });
+      plan();
+    };
+    if ($('near-save')) $('near-save').onclick = function () { $('to').focus(); toast('Gõ địa điểm vào ô Đến, rồi bấm "+ Lưu điểm đến"'); };
+  }
+  function loadNear() {
+    var btn = $('near-btn'); btn.textContent = 'Đang tìm vị trí…';
+    getPos(function (pos) { renderNear(pos); }, function () {
+      btn.textContent = 'Xem trạm gần tôi';
+      $('near-hint').hidden = false;
+      $('near-hint').textContent = 'Chưa lấy được vị trí. Hãy cho phép định vị cho trang này, hoặc tìm theo tên trạm ở ô bên dưới.';
+    });
+  }
+  $('near-btn').onclick = loadNear;
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(function (r) { if (r.state === 'granted') loadNear(); }, function () {});
+    }
+  } catch (e) {}
+
+  // ================= ĐANG ĐI =================
+  var trip = null, watchId = null, wakeLock = null;
+  function buildSteps(o, from, to) {
+    var st = [];
+    st.push({ type: 'walk', target: o.legs[0].fromPos, place: clean(o.legs[0].fromName), raw: o.legs[0].fromName, first: true });
+    o.legs.forEach(function (l, i) {
+      if (i > 0) st.push({ type: 'walk', target: l.fromPos, place: clean(l.fromName), raw: l.fromName, xfer: true });
+      st.push({ type: 'wait', leg: l });
+      st.push({ type: 'ride', leg: l, progress: 0, warned: false });
+    });
+    st.push({ type: 'walk', target: to.pos, place: to.name, final: true });
+    st.push({ type: 'done' });
+    return st;
+  }
+  function startTrip(o, from, to) {
+    trip = { o: o, from: from, to: to, steps: buildSteps(o, from, to), i: 0, gps: 'wait', me: null, acc: null };
+    $('trip').hidden = false; document.body.style.overflow = 'hidden';
+    requestWake();
+    if ('geolocation' in navigator) {
+      try {
+        watchId = navigator.geolocation.watchPosition(function (p) {
+          trip.me = [p.coords.latitude, p.coords.longitude]; trip.acc = p.coords.accuracy; trip.gps = 'ok'; onMove();
+        }, function () { trip.gps = 'off'; renderTrip(); }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+      } catch (e) { trip.gps = 'off'; }
+    } else trip.gps = 'off';
+    renderTrip(); say(stepSpeech());
+  }
+  function endTrip() {
+    if (watchId !== null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; }
+    if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+    try { speechSynthesis.cancel(); } catch (e) {}
+    trip = null; $('trip').hidden = true; document.body.style.overflow = '';
+  }
+  function requestWake() {
+    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { wakeLock = w; }, function () {}); } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () { if (trip && document.visibilityState === 'visible') requestWake(); });
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function say(t) { try { if (t) speak(t); } catch (e) {} }
+  function go(delta) {
+    if (!trip) return;
+    trip.i = Math.max(0, Math.min(trip.steps.length - 1, trip.i + delta));
+    var s = trip.steps[trip.i]; if (s.type === 'ride') { s.progress = 0; s.warned = false; }
+    buzz(120); renderTrip(); say(stepSpeech());
+  }
+  function stepSpeech() {
+    var s = trip.steps[trip.i];
+    if (s.type === 'walk') return s.final ? 'Xuống xe rồi. Đi bộ tới ' + sayName(s.place) + '.' : (s.xfer ? 'Đổi xe. Sang trạm ' : 'Đi bộ tới trạm ') + sayName(s.raw) + '.';
+    if (s.type === 'wait') return 'Chờ xe số ' + (s.leg.codes || [s.leg.code]).slice(0, 3).map(sayCode).join(', hoặc số ') + ', hướng ' + sayName(s.leg.toward) + '.';
+    if (s.type === 'ride') return 'Đã lên xe. Đi ' + s.leg.stops + ' trạm, xuống ở ' + sayName(s.leg.toName) + '. Tôi sẽ nhắc trước khi tới.';
+    return 'Đã tới nơi. Chúc bạn một ngày tốt lành.';
+  }
+  function onMove() {
+    if (!trip) return;
+    var s = trip.steps[trip.i], me = trip.me, dist = E.dist;
+    if (s.type === 'walk') {
+      if (dist(me, s.target) < (s.final ? 40 : 35)) { go(1); return; }
+    } else if (s.type === 'wait') {
+      // Đã rời trạm và đang ở gần một trạm phía trước trên tuyến → coi như đã lên xe
+      var ids = s.leg.stopIds;
+      if (dist(me, s.leg.fromPos) > 150) {
+        for (var k = 1; k < ids.length; k++) if (dist(me, eng.pos(ids[k])) < 120) { go(1); trip.steps[trip.i].progress = k; renderTrip(); return; }
+      }
+    } else if (s.type === 'ride') {
+      var ids2 = s.leg.stopIds, best = -1, bd = 1e9;
+      for (var j = s.progress; j < ids2.length; j++) { var d = dist(me, eng.pos(ids2[j])); if (d < bd) { bd = d; best = j; } }
+      if (best >= 0 && bd < 150 && best > s.progress) s.progress = best;
+      var left = ids2.length - 1 - s.progress;
+      if (left === 1 && !s.warned) { s.warned = true; buzz([400, 150, 400, 150, 400]); say('Chú ý. Trạm sau xuống xe, trạm ' + sayName(s.leg.toName) + '.'); }
+      if (left === 0 || dist(me, s.leg.toPos) < 50) { buzz([300, 100, 300]); go(1); return; }
+    }
+    renderTrip();
+  }
+  function renderTrip() {
+    if (!trip) return;
+    var s = trip.steps[trip.i], n = trip.steps.length - 1, me = trip.me, dist = E.dist, body = '';
+    var bar = trip.steps.slice(0, n).map(function (_, k) { return '<span class="' + (k < trip.i ? 'done' : k === trip.i ? 'cur' : '') + '"></span>'; }).join('');
+    var gps = trip.gps === 'ok' ? 'Đang theo dõi vị trí' + (trip.acc ? ' (sai số ~' + Math.round(trip.acc) + ' m)' : '') :
+      trip.gps === 'off' ? 'Không lấy được vị trí. Bấm "Bước tiếp" khi xong mỗi bước.' : 'Đang tìm vị trí…';
+    if (s.type === 'walk') {
+      var d = me ? dist(me, s.target) : null;
+      body = '<p class="trip-step">Bước ' + (trip.i + 1) + '/' + n + (s.xfer ? ' · Đổi xe' : '') + '</p>' +
+        '<p class="trip-title">' + (s.final ? 'Đi bộ tới ' + esc(s.place) : (s.xfer ? 'Sang trạm ' : 'Đi bộ tới trạm ') + esc(s.place)) + '</p>' +
+        (d !== null ? '<p class="trip-big">còn ' + m(d) + '</p>' : '') +
+        (sideHint(s.raw) ? '<p class="trip-alert">' + sideHint(s.raw) + '</p>' : '') +
+        '<p class="trip-note"><a class="link" href="' + mapLink(s.target) + '" target="_blank" rel="noopener">Chỉ đường đi bộ trên bản đồ</a></p>';
+    } else if (s.type === 'wait') {
+      var sv = s.leg.service;
+      body = '<p class="trip-step">Bước ' + (trip.i + 1) + '/' + n + '</p>' +
+        '<p class="trip-title">Chờ xe ' + codesHtml(s.leg) + '</p>' +
+        '<p class="trip-note">Đi hướng <b>' + esc(s.leg.toward) + '</b>. Hỏi phụ xe nếu chưa chắc.</p>' +
+        '<p class="trip-note">' + esc(s.leg.freq) + '</p><div class="badges">' + serviceBadge(sv) + '</div>';
+    } else if (s.type === 'ride') {
+      var ids = s.leg.stopIds, left = ids.length - 1 - s.progress;
+      var show = ids.slice(s.progress, Math.min(ids.length, s.progress + 6));
+      body = '<p class="trip-step">Bước ' + (trip.i + 1) + '/' + n + ' · Trên xe ' + esc(s.leg.code) + '</p>' +
+        '<p class="trip-big">còn ' + left + ' trạm</p>' +
+        '<p class="trip-title">Xuống ở ' + esc(clean(s.leg.toName)) + '</p>' +
+        (left === 1 ? '<p class="trip-alert">Trạm sau xuống xe! Chuẩn bị bấm chuông.</p>' : '') +
+        '<ol class="ride-list">' + show.map(function (id, k) {
+          var cls = (s.progress + k === ids.length - 1) ? 'dest' : (k === 0 ? 'cur' : '');
+          return '<li class="' + cls + '">' + (k === 0 ? 'Đang ở gần: ' : '') + esc(clean(data.stops[id][0])) + '</li>';
+        }).join('') + (s.progress + 6 < ids.length ? '<li>…</li><li class="dest">' + esc(clean(s.leg.toName)) + '</li>' : '') + '</ol>';
+    } else {
+      body = '<p class="trip-title">Đã tới nơi</p><p class="trip-note">' + esc(trip.to.name) + '</p>';
+    }
+    var done = s.type === 'done';
+    $('trip-inner').innerHTML =
+      '<div class="trip-top"><b>Đang đi</b><button class="btn" id="trip-end">' + (done ? 'Đóng' : 'Kết thúc') + '</button></div>' +
+      '<div class="trip-progress">' + bar + '</div>' +
+      '<div class="trip-card' + (done ? ' trip-done' : '') + '">' + body + '</div>' +
+      (done ? '' : '<div class="trip-btns">' +
+        (s.type === 'wait' ? '<button class="btn primary wide" id="trip-next">Tôi đã lên xe</button>' :
+         s.type === 'ride' ? '<button class="btn primary wide" id="trip-next">Tôi đã xuống xe</button>' :
+         '<button class="btn primary wide" id="trip-next">Bước tiếp</button>') +
+        '<button class="btn" id="trip-back">Quay lại</button><button class="btn" id="trip-say">Đọc to</button></div>') +
+      '<p class="gps-state">' + gps + '</p>';
+    $('trip-end').onclick = endTrip;
+    if ($('trip-next')) $('trip-next').onclick = function () { go(1); };
+    if ($('trip-back')) $('trip-back').onclick = function () { go(-1); };
+    if ($('trip-say')) $('trip-say').onclick = function () { say(stepSpeech()); };
+  }
+  window.__tiktakTripRaw = function () { return trip; };
+  window.__tiktakTrip = function () { return trip && { i: trip.i, type: trip.steps[trip.i].type, progress: trip.steps[trip.i].progress, n: trip.steps.length }; };
+
 
   function plan(example) {
     $('plan-err').hidden = true;
