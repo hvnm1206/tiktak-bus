@@ -1,0 +1,498 @@
+<title>Tiktak Bus</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: một cột như cuốn sổ tay đi xe; biển số tuyến kiểu bảng LED đầu xe là điểm nhấn duy nhất */
+:root {
+  --bg: #eef3f8;
+  --surface: #ffffff;
+  --surface-2: #e3ebf3;
+  --ink: #0f2233;
+  --ink-2: #4a5d6e;
+  --line: #cfdbe6;
+  --accent: #0b5cad;        /* xanh xe buýt */
+  --accent-ink: #ffffff;
+  --sign-bg: #10161c;       /* bảng LED đầu xe */
+  --sign-fg: #ffb81c;
+  --walk: #1d7a55;
+  --warn-bg: #fff1d6; --warn-fg: #7a4a00;
+  --stop-bg: #fde3e1; --stop-fg: #8f1d14;
+  --ok-bg: #dff3e9;  --ok-fg: #13583c;
+  --focus: #ffb81c;
+  --font-ui: "Be Vietnam Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sign: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --fs: 18px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b141c; --surface: #13202b; --surface-2: #1b2b38; --ink: #e8f0f7; --ink-2: #9fb2c3; --line: #263949;
+  --accent: #4ea3f5; --accent-ink: #06121d; --sign-bg: #05090d; --sign-fg: #ffc23d; --walk: #5cc79b;
+  --warn-bg: #3a2c10; --warn-fg: #ffd58a; --stop-bg: #3e1714; --stop-fg: #ffb4ab; --ok-bg: #12352a; --ok-fg: #8fe0bb;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b141c; --surface: #13202b; --surface-2: #1b2b38; --ink: #e8f0f7; --ink-2: #9fb2c3; --line: #263949;
+  --accent: #4ea3f5; --accent-ink: #06121d; --sign-bg: #05090d; --sign-fg: #ffc23d; --walk: #5cc79b;
+  --warn-bg: #3a2c10; --warn-fg: #ffd58a; --stop-bg: #3e1714; --stop-fg: #ffb4ab; --ok-bg: #12352a; --ok-fg: #8fe0bb;
+  color-scheme: dark }
+html.big { --fs: 21px; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: var(--fs); line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Header */
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px 2px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { background: var(--sign-bg); color: var(--sign-fg); font-family: var(--font-sign); font-weight: 700; font-size: 1.15em;
+  padding: 2px 10px; border-radius: 6px; letter-spacing: .04em; }
+.brand h1 { font-size: 1.35em; margin: 0; font-weight: 800; letter-spacing: -.01em; }
+.textsize { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 700; cursor: pointer; min-height: 44px; }
+.textsize[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+/* Tabs */
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 14px; }
+.tabs button { border: 0; background: transparent; padding: 10px 6px; border-radius: 10px; font-weight: 600; cursor: pointer; min-height: 48px; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+
+/* Planner card */
+.panel { background: var(--surface); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; border: 1px solid var(--line); }
+.field { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.field label { font-weight: 700; font-size: .85em; color: var(--ink-2); letter-spacing: .02em; }
+.field input { width: 100%; min-height: 56px; border: 2px solid var(--line); background: var(--bg); border-radius: 12px; padding: 10px 14px; }
+.field input:focus { border-color: var(--accent); outline: none; }
+.points { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.points .stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.swap { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); cursor: pointer; font-size: 1.2em; }
+.suggest { background: var(--surface); border: 2px solid var(--accent); border-radius: 12px; overflow: hidden; }
+.suggest button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 14px; cursor: pointer; min-height: 52px; }
+.suggest button:last-child { border-bottom: 0; }
+.suggest button:hover, .suggest button:focus { background: var(--surface-2); }
+.saved { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 44px; font-weight: 600; }
+.chip.ghost { border-style: dashed; color: var(--ink-2); font-weight: 500; }
+.modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 520px) { .modes { grid-template-columns: repeat(4, 1fr); } }
+.modes button { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 6px; font-weight: 600; cursor: pointer; min-height: 52px; }
+.modes button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.go { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 1.1em; border-radius: 14px; min-height: 60px; cursor: pointer; }
+.hint { color: var(--ink-2); font-size: .85em; margin: 0; }
+.err { background: var(--stop-bg); color: var(--stop-fg); border-radius: 12px; padding: 12px 14px; margin: 0; }
+
+/* Results */
+.results { display: flex; flex-direction: column; gap: 14px; }
+.results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.results-head h2 { margin: 0; font-size: 1.1em; }
+.tag { font-size: .75em; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.opt.best { border: 2px solid var(--accent); }
+.opt-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 16px; background: var(--surface-2); }
+.opt-top .sum { color: var(--ink-2); font-size: .9em; }
+.sign { display: inline-flex; align-items: center; justify-content: center; min-width: 2.6em; height: 1.9em; padding: 0 .4em; background: var(--sign-bg); color: var(--sign-fg);
+  font-family: var(--font-sign); font-weight: 700; font-size: 1.35em; border-radius: 6px; letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+.sign.sm { font-size: 1.05em; height: 1.75em; }
+.arrow { color: var(--ink-2); font-weight: 700; }
+.steps { list-style: none; margin: 0; padding: 6px 16px 4px; }
+.step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.step:last-child { border-bottom: 0; }
+.dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .85em; }
+.dot.walk { background: var(--ok-bg); color: var(--walk); }
+.dot.bus { background: var(--sign-bg); color: var(--sign-fg); font-family: var(--font-sign); }
+.step p { margin: 0; }
+.step .main { font-weight: 600; }
+.step .sub { color: var(--ink-2); font-size: .88em; margin-top: 2px; }
+.place { font-weight: 700; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.badge { font-size: .78em; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.badge.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.badge.stop { background: var(--stop-bg); color: var(--stop-fg); }
+.link { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; font-size: .88em; }
+.stoplist { margin: 8px 0 0; padding-left: 1.4em; color: var(--ink-2); font-size: .88em; }
+.stoplist li { padding: 2px 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 16px; }
+.btn { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 14px; font-weight: 600; cursor: pointer; min-height: 48px; }
+.btn:hover { border-color: var(--accent); }
+.walkonly { background: var(--ok-bg); color: var(--ok-fg); border-radius: 14px; padding: 14px 16px; margin: 0; font-weight: 600; }
+
+/* Stop / route lookup */
+.list { display: flex; flex-direction: column; }
+.row { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row p { margin: 0; }
+.row .sub { color: var(--ink-2); font-size: .85em; }
+.dirs { display: grid; gap: 14px; }
+@media (min-width: 560px) { .dirs { grid-template-columns: 1fr 1fr; } }
+.dirs h3 { margin: 0 0 6px; font-size: 1em; }
+.dirs ol { margin: 0; padding-left: 1.5em; font-size: .9em; }
+.dirs li { padding: 3px 0; }
+
+footer { color: var(--ink-2); font-size: .8em; display: flex; flex-direction: column; gap: 6px; padding-top: 6px; }
+footer p { margin: 0; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
+  padding: 12px 18px; border-radius: 12px; font-weight: 600; z-index: 20; max-width: calc(100% - 32px); }
+.copybox { width: 100%; min-height: 120px; border: 2px solid var(--accent); border-radius: 12px; padding: 10px; background: var(--bg); }
+@media (prefers-reduced-motion: no-preference) { .opt { animation: rise .25s ease-out both; } @keyframes rise { from { transform: translateY(6px); } to { transform: none; } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="brand-mark">BUS</span><h1>Tiktak Bus</h1></div>
+    <button class="textsize" id="textsize" aria-pressed="false" title="Phóng to chữ">A+ Chữ to</button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-plan" aria-selected="true" data-tab="plan">Chỉ đường</button>
+    <button role="tab" id="tab-stop" aria-selected="false" data-tab="stop">Xe qua trạm</button>
+    <button role="tab" id="tab-route" aria-selected="false" data-tab="route">Tra tuyến</button>
+  </nav>
+
+  <!-- CHỈ ĐƯỜNG -->
+  <section id="view-plan" class="wrap" style="gap:18px">
+    <div class="panel">
+      <div class="points">
+        <div class="stack">
+          <div class="field">
+            <label for="from">Đi từ</label>
+            <input id="from" autocomplete="off" placeholder="Tên trạm, đường, bệnh viện… hoặc gõ: từ A về B">
+            <div class="suggest" id="from-sug" hidden></div>
+            <button type="button" class="chip" id="gps" style="align-self:flex-start">Dùng vị trí của tôi</button>
+          </div>
+          <div class="field">
+            <label for="to">Đến</label>
+            <input id="to" autocomplete="off" placeholder="Muốn đến đâu?">
+            <div class="suggest" id="to-sug" hidden></div>
+          </div>
+        </div>
+        <button class="swap" id="swap" title="Đổi chiều" aria-label="Đổi điểm đi và điểm đến">⇅</button>
+      </div>
+      <div class="saved" id="saved"></div>
+      <div class="modes" role="group" aria-label="Ưu tiên">
+        <button data-mode="easy" aria-pressed="true">Dễ đi</button>
+        <button data-mode="lesswalk" aria-pressed="false">Ít đi bộ</button>
+        <button data-mode="lessxfer" aria-pressed="false">Ít đổi xe</button>
+        <button data-mode="lessstop" aria-pressed="false">Ít trạm</button>
+      </div>
+      <button class="go" id="go">Chỉ đường cho tôi</button>
+      <p class="err" id="plan-err" hidden></p>
+    </div>
+    <div class="results" id="results"></div>
+  </section>
+
+  <!-- XE QUA TRẠM -->
+  <section id="view-stop" class="wrap" style="gap:18px" hidden>
+    <div class="panel">
+      <div class="field">
+        <label for="stopq">Tên trạm</label>
+        <input id="stopq" autocomplete="off" placeholder="Ví dụ: Bệnh viện Bạch Mai">
+        <div class="suggest" id="stopq-sug" hidden></div>
+      </div>
+      <p class="hint">Xem các tuyến dừng ở trạm này, đi về hướng nào, giờ chạy và giá vé.</p>
+    </div>
+    <div class="panel" id="stop-out" hidden></div>
+  </section>
+
+  <!-- TRA TUYẾN -->
+  <section id="view-route" class="wrap" style="gap:18px" hidden>
+    <div class="panel">
+      <div class="field">
+        <label for="routeq">Số tuyến</label>
+        <input id="routeq" autocomplete="off" inputmode="text" placeholder="Ví dụ: 32, 09B, E08">
+      </div>
+      <div class="saved" id="route-picks"></div>
+    </div>
+    <div class="panel" id="route-out" hidden></div>
+  </section>
+
+  <footer>
+    <p>Dữ liệu 163 tuyến, 4.969 trạm lấy từ Timbus, nhập ngày 18/10/2026. Lộ trình có thể đã thay đổi.</p>
+    <p>Khoảng cách đi bộ tính theo đường thẳng, đường thực tế thường dài hơn. App không báo giờ xe đến; giờ chạy là giờ xuất bến đầu và cuối tại đầu tuyến.</p>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script id="transit-data" type="application/json">{{DATA}}</script>
+<script>{{ENGINE}}</script>
+<script>
+(function () {
+  'use strict';
+  var data = JSON.parse(document.getElementById('transit-data').textContent);
+  var E = window.TiktakEngine, eng = new E(data), clean = E.cleanName;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
+  // ---- lưu trữ cục bộ (an toàn) ----
+  function load(k, d) { try { var v = localStorage.getItem('tiktak.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem('tiktak.' + k, JSON.stringify(v)); } catch (e) {} }
+
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 2600); }
+
+  // ---- chữ to ----
+  var big = load('big', false);
+  function applyBig() { document.documentElement.classList.toggle('big', big); $('textsize').setAttribute('aria-pressed', String(big)); }
+  applyBig();
+  $('textsize').onclick = function () { big = !big; save('big', big); applyBig(); };
+
+  // ---- tabs ----
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    b.onclick = function () {
+      document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', String(x === b)); });
+      ['plan', 'stop', 'route'].forEach(function (v) { $('view-' + v).hidden = v !== b.dataset.tab; });
+    };
+  });
+
+  // ---- chọn điểm ----
+  var sel = { from: null, to: null }; // {name, pos}
+  function showSug(inputId, onPick) {
+    var inp = $(inputId), box = $(inputId + '-sug');
+    function render() {
+      var q = inp.value, trip = E.parseTrip(q);
+      if (inputId === 'from' && trip && trip.from && trip.to) {
+        box.innerHTML = '<button type="button" data-trip="1">Tìm đường <b>' + esc(trip.from) + '</b> → <b>' + esc(trip.to) + '</b></button>';
+        box.hidden = false;
+        box.firstChild.onclick = function () { box.hidden = true; setText('from', trip.from); setText('to', trip.to); plan(); };
+        return;
+      }
+      var hits = eng.search(q, 6);
+      if (!hits.length) { box.hidden = true; return; }
+      box.innerHTML = hits.map(function (h, i) { return '<button type="button" data-i="' + i + '">' + esc(h.name) + '</button>'; }).join('');
+      box.hidden = false;
+      box.querySelectorAll('button').forEach(function (btn) {
+        btn.onclick = function () { var h = hits[+btn.dataset.i]; inp.value = h.name; box.hidden = true; onPick({ name: h.name, pos: h.pos, id: h.id }); };
+      });
+    }
+    inp.addEventListener('input', function () { if (inputId === 'from' || inputId === 'to') sel[inputId] = null; render(); });
+    inp.addEventListener('focus', render);
+    inp.addEventListener('blur', function () { setTimeout(function () { box.hidden = true; }, 200); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { box.hidden = true; if (inputId === 'from' || inputId === 'to') plan(); } });
+  }
+  function setText(k, text) { $(k).value = text; sel[k] = null; }
+  function resolve(k) {
+    if (sel[k]) return sel[k];
+    var q = $(k).value.trim(); if (!q) return null;
+    var hits = eng.search(q, 6);
+    if (!hits.length) return { missing: q };
+    var exact = hits.filter(function (h) { return E.norm(h.name) === E.norm(q); })[0];
+    if (!exact && hits.length > 1) return { choose: hits, q: q };
+    var h = exact || hits[0];
+    $(k).value = h.name;
+    return (sel[k] = { name: h.name, pos: h.pos, id: h.id });
+  }
+  showSug('from', function (p) { sel.from = p; });
+  // ---- GPS ----
+  $('gps').onclick = function () {
+    var btn = $('gps');
+    if (!('geolocation' in navigator)) { toast('Máy này không hỗ trợ định vị. Hãy gõ tên trạm gần bạn.'); return; }
+    btn.textContent = 'Đang tìm vị trí…';
+    navigator.geolocation.getCurrentPosition(function (p) {
+      var pos = [p.coords.latitude, p.coords.longitude];
+      var near = eng.near(pos, 3000)[0];
+      if (!near) { btn.textContent = 'Dùng vị trí của tôi'; toast('Vị trí của bạn có vẻ ngoài vùng xe buýt Hà Nội.'); return; }
+      $('from').value = 'Vị trí của tôi'; sel.from = { name: 'Vị trí của tôi', pos: pos };
+      btn.textContent = 'Đã lấy vị trí (sai số ~' + Math.round(p.coords.accuracy) + ' m)';
+    }, function () {
+      btn.textContent = 'Dùng vị trí của tôi';
+      toast('Chưa lấy được vị trí. Hãy cho phép định vị, hoặc gõ tên trạm gần bạn.');
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  };
+  showSug('to', function (p) { sel.to = p; });
+  $('swap').onclick = function () { var a = $('from').value, b = $('to').value, s = sel.from; $('from').value = b; $('to').value = a; sel.from = sel.to; sel.to = s; };
+
+  // ---- địa điểm đã lưu ----
+  var saved = load('saved', []);
+  function renderSaved() {
+    var html = saved.map(function (s, i) { return '<button class="chip" data-i="' + i + '" title="' + esc(s.name) + '">' + esc(s.label) + '</button>'; }).join('');
+    html += '<button class="chip ghost" id="save-to">+ Lưu điểm đến</button>';
+    $('saved').innerHTML = html;
+    $('saved').querySelectorAll('.chip[data-i]').forEach(function (c) {
+      c.onclick = function () {
+        var s = saved[+c.dataset.i];
+        var k = !$('from').value.trim() ? 'from' : 'to';
+        $(k).value = s.name; sel[k] = { name: s.name, pos: s.pos };
+        toast('Đã điền "' + s.label + '" vào ô ' + (k === 'from' ? 'Đi từ' : 'Đến'));
+      };
+    });
+    $('save-to').onclick = startSave;
+  }
+  function startSave() {
+    var p = resolve('to');
+    if (!p || p.missing) { toast('Hãy chọn điểm đến trước, rồi bấm Lưu'); $('to').focus(); return; }
+    var box = $('saved');
+    box.innerHTML = '<div class="field" style="flex:1"><label for="save-label">Đặt tên cho "' + esc(p.name) + '"</label>' +
+      '<input id="save-label" placeholder="Ví dụ: Nhà, Bệnh viện, Nhà con"></div>' +
+      '<div style="display:flex;gap:8px;width:100%"><button class="btn" id="save-ok">Lưu</button><button class="btn" id="save-cancel">Thôi</button></div>';
+    $('save-label').focus();
+    $('save-ok').onclick = function () {
+      var label = $('save-label').value.trim() || p.name.slice(0, 18);
+      saved.push({ label: label, name: p.name, pos: p.pos }); saved = saved.slice(-8); save('saved', saved); renderSaved(); toast('Đã lưu "' + label + '"');
+    };
+    $('save-cancel').onclick = renderSaved;
+  }
+  renderSaved();
+
+  // ---- chế độ ----
+  var mode = load('mode', 'easy');
+  function applyMode() { document.querySelectorAll('.modes button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); }); }
+  document.querySelectorAll('.modes button').forEach(function (b) { b.onclick = function () { mode = b.dataset.mode; save('mode', mode); applyMode(); if (sel.from && sel.to) plan(); }; });
+  applyMode();
+
+  // ---- hiển thị ----
+  function m(x) { x = Math.round(x / 10) * 10; return x >= 1000 ? (x / 1000).toFixed(1).replace('.', ',') + ' km' : x + ' m'; }
+
+  function mapLink(pos) { return 'https://www.google.com/maps/search/?api=1&query=' + pos[0] + ',' + pos[1]; }
+  function serviceBadge(s) {
+    if (!s || s.state === 'unknown') return '';
+    if (s.state === 'ended') return '<span class="badge stop">Đã hết chuyến hôm nay (chuyến cuối ' + s.last + ')</span>';
+    if (s.state === 'notyet') return '<span class="badge warn">Chưa chạy, chuyến đầu ' + s.first + '</span>';
+    if (s.state === 'ending') return '<span class="badge warn">Sắp hết chuyến: chuyến cuối ' + s.last + ', còn ' + s.left + ' phút</span>';
+    return '<span class="badge ok">Đang chạy ' + s.first + '–' + s.last + '</span>';
+  }
+  function codesHtml(l, small) {
+    var codes = l.codes || [l.code], show = codes.slice(0, 4);
+    return show.map(function (c) { return '<span class="sign' + (small ? ' sm' : '') + '">' + esc(c) + '</span>'; }).join(' ') +
+      (codes.length > 4 ? ' <span class="sub">+' + (codes.length - 4) + ' tuyến</span>' : '');
+  }
+  function price(p) { return String(p || '').replace(/VNĐ\/lượt/i, 'đ/lượt').replace(/(\d)(?=(\d{3})+đ)/g, '$1.'); }
+
+  function shareText(o, from, to) {
+    var lines = ['Đường đi xe buýt: ' + from.name + ' → ' + to.name];
+    if (o.walkStart >= 40) lines.push('- Đi bộ khoảng ' + m(o.walkStart) + ' tới trạm ' + clean(o.legs[0].fromName) + '.');
+    o.legs.forEach(function (l, i) {
+      if (i > 0) lines.push('- Xuống xe, ' + (o.walkXfer >= 40 ? 'đi bộ khoảng ' + m(o.walkXfer) + ' ' : '') + 'sang trạm ' + clean(l.fromName) + ' để đổi xe.');
+      lines.push('- Lên xe số ' + (l.codes || [l.code]).join(' hoặc ') + ' (hướng ' + l.toward + ') tại trạm ' + clean(l.fromName) + ', đi ' + l.stops + ' trạm, xuống ở trạm ' + clean(l.toName) + '.');
+    });
+    if (o.walkEnd >= 40) lines.push('- Đi bộ khoảng ' + m(o.walkEnd) + ' tới nơi.');
+    lines.push('(Tiktak Bus)');
+    return lines.join('\n');
+  }
+
+  function renderPlan(res, from, to, example) {
+    var out = $('results');
+    if (res.walkOnly < 500 && !res.options.length) {
+      out.innerHTML = '<p class="walkonly">Hai điểm chỉ cách nhau khoảng ' + m(res.walkOnly) + '. Đi bộ là nhanh nhất.</p>'; return;
+    }
+    if (!res.options.length) {
+      out.innerHTML = '<p class="err">Chưa tìm thấy tuyến xe buýt phù hợp (đi thẳng hoặc đổi xe một lần) giữa hai điểm này. Thử chọn một trạm lớn gần đó.</p>'; return;
+    }
+    var allEnded = res.options.every(function (o) { return o.legs.some(function (l) { return l.service && (l.service.state === 'ended' || l.service.state === 'notyet'); }); });
+    var head = '<div class="results-head"><h2>' + esc(from.name) + ' → ' + esc(to.name) + '</h2>' + (example ? '<span class="tag">Ví dụ</span>' : '') + '</div>';
+    if (res.walkOnly < 700) head += '<p class="walkonly">Chỉ cách khoảng ' + m(res.walkOnly) + ', đi bộ cũng được.</p>';
+    if (allEnded) head += '<p class="err">Các tuyến phù hợp đều đã hết chuyến hoặc chưa chạy vào giờ này.</p>';
+    out.innerHTML = head + res.options.map(function (o, oi) {
+      var top = o.legs.map(function (l) { return codesHtml(l); }).join(' <span class="arrow">→</span> ');
+      var sum = (o.transfers ? 'Đổi xe 1 lần' : 'Không đổi xe') + ' · ' + o.stopsTotal + ' trạm · đi bộ ~' + m(o.walkTotal);
+      var steps = [];
+      steps.push('<li class="step"><span class="dot walk">1</span><div><p class="main">' + (o.walkStart < 40 ? 'Ra trạm <span class="place">' + esc(clean(o.legs[0].fromName)) + '</span>, ngay gần đây' : 'Đi bộ khoảng ' + m(o.walkStart) + ' tới trạm <span class="place">' + esc(clean(o.legs[0].fromName)) + '</span>') + '</p>' +
+        '<p class="sub"><a class="link" href="' + mapLink(o.legs[0].fromPos) + '" target="_blank" rel="noopener">Xem trạm trên bản đồ</a></p></div></li>');
+      o.legs.forEach(function (l, li) {
+        if (li > 0) steps.push('<li class="step"><span class="dot walk">↔</span><div><p class="main">Xuống xe, ' + (o.walkXfer >= 40 ? 'đi bộ khoảng ' + m(o.walkXfer) + ' ' : '') + 'sang trạm <span class="place">' + esc(clean(l.fromName)) + '</span> để đổi xe</p></div></li>');
+        steps.push('<li class="step"><span class="dot bus">XE</span><div>' +
+          '<p class="main">Lên xe ' + codesHtml(l, true) + ' đi hướng <span class="place">' + esc(l.toward) + '</span></p>' +
+          '<p class="sub">Đi ' + l.stops + ' trạm, xuống ở <span class="place">' + esc(clean(l.toName)) + '</span></p>' +
+          '<p class="sub">' + esc(l.freq) + (l.price ? ' · ' + esc(price(l.price)) : '') + '</p>' +
+          '<div class="badges">' + serviceBadge(l.service) + '</div>' +
+          '<p class="sub"><button class="link" data-stops="' + oi + ':' + li + '">Xem ' + (l.stops + 1) + ' trạm trên đường đi</button></p>' +
+          '<ol class="stoplist" id="sl-' + oi + '-' + li + '" hidden>' + l.stopIds.map(function (id) { return '<li>' + esc(clean(data.stops[id][0])) + '</li>'; }).join('') + '</ol>' +
+          '</div></li>');
+      });
+      steps.push('<li class="step"><span class="dot walk">✓</span><div><p class="main">' + (o.walkEnd < 40 ? 'Xuống xe là tới nơi' : 'Đi bộ khoảng ' + m(o.walkEnd) + ' tới nơi') + '</p></div></li>');
+      return '<article class="opt' + (oi === 0 ? ' best' : '') + '">' +
+        '<div class="opt-top">' + top + '<span class="sum">' + sum + '</span>' + (oi === 0 ? '<span class="tag">Gợi ý</span>' : '') + '</div>' +
+        '<ol class="steps">' + steps.join('') + '</ol>' +
+        '<div class="actions"><button class="btn" data-speak="' + oi + '">Đọc to</button><button class="btn" data-share="' + oi + '">Gửi cho người thân</button></div>' +
+        '<div id="copy-' + oi + '"></div></article>';
+    }).join('');
+
+    out.querySelectorAll('[data-stops]').forEach(function (b) {
+      b.onclick = function () { var p = b.dataset.stops.split(':'), el = $('sl-' + p[0] + '-' + p[1]); el.hidden = !el.hidden; b.textContent = el.hidden ? 'Xem các trạm trên đường đi' : 'Ẩn danh sách trạm'; };
+    });
+    out.querySelectorAll('[data-share]').forEach(function (b) {
+      b.onclick = function () {
+        var text = shareText(res.options[+b.dataset.share], from, to), slot = $('copy-' + b.dataset.share);
+        function fallback() {
+          slot.innerHTML = '<div style="padding:0 16px 16px"><p class="hint">Chọn hết đoạn dưới đây rồi sao chép để gửi:</p><textarea class="copybox" readonly></textarea></div>';
+          var ta = slot.querySelector('textarea'); ta.value = text; ta.focus(); ta.select();
+        }
+        try { navigator.clipboard.writeText(text).then(function () { toast('Đã sao chép. Dán vào Zalo hoặc tin nhắn để gửi.'); }, fallback); } catch (e) { fallback(); }
+      };
+    });
+    out.querySelectorAll('[data-speak]').forEach(function (b) {
+      b.onclick = function () {
+        var text = shareText(res.options[+b.dataset.speak], from, to).replace('(Tiktak Bus)', '').replace(/- /g, '');
+        try {
+          if (!('speechSynthesis' in window)) throw 0;
+          speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(text); u.lang = 'vi-VN'; u.rate = 0.9;
+          var v = speechSynthesis.getVoices().filter(function (x) { return /^vi/i.test(x.lang); })[0]; if (v) u.voice = v;
+          speechSynthesis.speak(u);
+        } catch (e) { toast('Thiết bị này chưa hỗ trợ đọc to.'); }
+      };
+    });
+  }
+
+  function plan(example) {
+    $('plan-err').hidden = true;
+    var trip = E.parseTrip($('from').value);
+    if (trip && trip.from && trip.to && !$('to').value.trim()) { setText('from', trip.from); setText('to', trip.to); }
+    var a = resolve('from'), b = resolve('to');
+    var msg = !a ? 'Hãy nhập nơi đi.' : a.missing ? 'Không tìm thấy "' + a.missing + '". Thử gõ tên trạm, tên đường hoặc bệnh viện gần đó.' :
+              !b ? 'Hãy nhập nơi muốn đến.' : b.missing ? 'Không tìm thấy "' + b.missing + '". Thử gõ tên trạm, tên đường hoặc bệnh viện gần đó.' : '';
+    if (msg) { $('plan-err').textContent = msg; $('plan-err').hidden = false; $('results').innerHTML = ''; return; }
+    var amb = a.choose ? ['from', a] : b.choose ? ['to', b] : null;
+    if (amb) {
+      var k = amb[0], hits = amb[1].choose;
+      $('results').innerHTML = '<div class="panel"><p class="main" style="margin:0"><b>Có nhiều nơi tên "' + esc(amb[1].q) + '".</b> Bạn muốn ' + (k === 'from' ? 'đi từ' : 'đến') + ' trạm nào?</p>' +
+        '<div class="list">' + hits.map(function (h, i) { return '<button class="btn" style="text-align:left;margin-top:8px" data-pick="' + i + '">' + esc(h.name) + '</button>'; }).join('') + '</div>' +
+        '<p class="hint">Không thấy đúng chỗ? Gõ thêm tên đường hoặc quận, ví dụ "Hồ Gươm Đinh Tiên Hoàng".</p></div>';
+      $('results').querySelectorAll('[data-pick]').forEach(function (btn) {
+        btn.onclick = function () { var h = hits[+btn.dataset.pick]; $(k).value = h.name; sel[k] = { name: h.name, pos: h.pos, id: h.id }; plan(); };
+      });
+      return;
+    }
+    var res = eng.plan(a.pos, b.pos, { mode: mode, now: new Date(), limit: 3 });
+    renderPlan(res, a, b, example === true);
+    if (example !== true) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  $('go').onclick = function () { plan(); };
+
+  // ---- xe qua trạm ----
+  function renderStop(h) {
+    var list = eng.routesAt(h.id, 60), now = new Date(), out = $('stop-out');
+    out.hidden = false;
+    out.innerHTML = '<div class="results-head"><h2>' + esc(h.name) + '</h2><a class="link" href="' + mapLink(h.pos) + '" target="_blank" rel="noopener">Bản đồ</a></div>' +
+      '<p class="hint">' + list.length + ' lượt tuyến dừng ở trạm này hoặc trạm sát bên.</p><div class="list">' +
+      list.map(function (r) {
+        return '<div class="row"><span class="sign sm">' + esc(r.code) + '</span><div><p><b>Hướng ' + esc(r.toward) + '</b></p>' +
+          '<p class="sub">' + esc(r.freq) + (r.price ? ' · ' + esc(price(r.price)) : '') + '</p><div class="badges">' + serviceBadge(eng.service(r.routeId, r.dir, now)) + '</div></div></div>';
+      }).join('') + '</div>';
+  }
+  showSug('stopq', renderStop);
+
+  // ---- tra tuyến ----
+  function renderRoute(id) {
+    var r = data.routes[id], dirs = eng.routeStops(id), now = new Date(), out = $('route-out');
+    out.hidden = false;
+    out.innerHTML = '<div class="opt-top" style="border-radius:12px"><span class="sign">' + esc(r.c) + '</span><span><b>' + esc(r.n) + '</b></span></div>' +
+      '<p class="sub" style="margin:0">' + esc(r.q) + (r.p ? ' · ' + esc(price(r.p)) : '') + '</p>' +
+      '<div class="dirs">' + dirs.map(function (d) {
+        var toward = d.dir === 'GO' ? r.l : r.f;
+        return '<div><h3>Hướng ' + esc(toward) + '</h3><div class="badges" style="margin-bottom:8px">' + serviceBadge(eng.service(id, d.dir, now)) + '</div><ol>' +
+          d.stops.map(function (s) { return '<li>' + esc(s.name) + '</li>'; }).join('') + '</ol></div>';
+      }).join('') + '</div>';
+  }
+  $('routeq').addEventListener('input', function () {
+    var ids = eng.findRoute($('routeq').value);
+    $('route-picks').innerHTML = ids.map(function (id) { return '<button class="chip" data-id="' + id + '">' + esc(data.routes[id].c) + ' · ' + esc(data.routes[id].n) + '</button>'; }).join('');
+    $('route-picks').querySelectorAll('.chip').forEach(function (c) { c.onclick = function () { renderRoute(c.dataset.id); }; });
+    if (ids.length && E.norm(data.routes[ids[0]].c) === E.norm($('routeq').value).replace(/\s+/g, '')) renderRoute(ids[0]);
+  });
+
+  // ---- mở sẵn một ví dụ ----
+  setText('from', 'Bệnh viện Bạch Mai - 78 Giải Phóng');
+  setText('to', 'Cầu Giấy');
+  plan(true);
+})();
+</script>

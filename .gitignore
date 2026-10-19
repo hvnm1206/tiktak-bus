@@ -1,0 +1,5 @@
+data/transitdb.xlsx
+shots/
+dist/local.html
+node_modules/
+__pycache__/
