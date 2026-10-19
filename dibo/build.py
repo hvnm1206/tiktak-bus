@@ -1,5 +1,5 @@
 # Đóng gói TikTak Đi Bộ thành site/dibo/index.html (tạm đặt chung tên miền bus).
-# Chạy: python3 dibo/build.py   |  Test: node --test dibo/engine.test.mjs dibo/stepcounter.test.mjs
+# Chạy: python3 dibo/build.py   |  Test: node --test dibo/engine.test.mjs dibo/stepcounter.test.mjs dibo/session.test.mjs
 import os
 d = os.path.dirname(os.path.abspath(__file__))
 rd = lambda f: open(os.path.join(d, f), encoding='utf-8').read()

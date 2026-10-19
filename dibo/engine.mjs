@@ -238,3 +238,79 @@ export function computeProfile(p, baseline) {
     flags,
   };
 }
+
+// ---- 7. GPS & tổng kết buổi đi ----
+// Khoảng cách 2 điểm (mét), công thức haversine
+export function haversine(a, b) {
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// Cộng dồn quãng đường, lọc nhiễu: bỏ điểm sai số > 25 m, bước nhảy < 3 m
+// hoặc vận tốc > 3 m/s (nhanh hơn đi bộ).
+export function createGpsTrack({ maxAcc = 25, minMove = 3, maxSpeed = 3 } = {}) {
+  const pts = [];
+  let meters = 0, last = null;
+  return {
+    add(p) { // p: {lat, lon, acc, t (giây)}
+      if (p.acc > maxAcc) return false;
+      if (!last) { last = p; pts.push(p); return true; }
+      const d = haversine(last, p), dt = p.t - last.t;
+      if (d < minMove) return false;
+      if (dt > 0 && d / dt > maxSpeed) return false;
+      meters += d; last = p; pts.push(p); return true;
+    },
+    // ngắt đoạn (tạm dừng): điểm kế tiếp không nối với điểm trước
+    cut() { last = null; },
+    get meters() { return meters; },
+    get points() { return pts; },
+    // tốc độ km/h trong cửa sổ `win` giây gần nhất
+    speed(now, win = 60) {
+      const r = pts.filter((x) => now - x.t <= win);
+      if (r.length < 2) return 0;
+      let d = 0; for (let i = 1; i < r.length; i++) d += haversine(r[i - 1], r[i]);
+      const dt = r[r.length - 1].t - r[0].t;
+      return dt > 0 ? (d / dt) * 3.6 : 0;
+    },
+  };
+}
+
+// Nhắc nhịp: lệch quá 10% so với mục tiêu
+export function cadenceAdvice(target, actual) {
+  if (!actual || !target) return null;
+  const r = (actual - target) / target;
+  if (r < -0.1) return "nhanh";   // cần đi nhanh lên
+  if (r > 0.1) return "cham";     // cần chậm lại
+  return null;
+}
+
+// Tổng kết buổi đi. meters: GPS (null nếu không có); strideCmVal: sải chân đang dùng
+export function sessionSummary(p, { steps, seconds, meters = null, strideCmVal, plannedSteps = 0 }) {
+  const minutes = seconds / 60;
+  const km = meters != null && meters > 0 ? meters / 1000 : (steps * strideCmVal) / 100000;
+  const kmSource = meters != null && meters > 0 ? "gps" : "buoc";
+  const speed = minutes > 0 ? km / (minutes / 60) : 0;
+  const avgCad = minutes > 0 ? steps / minutes : 0;
+  return {
+    steps, minutes: Math.round(minutes), seconds: Math.round(seconds),
+    km: Math.round(km * 100) / 100, kmSource,
+    speed: r1(speed), avgCad: Math.round(avgCad),
+    kcal: Math.round(kcal(metForSpeed(speed), p.weight, minutes)),
+    pctPlan: plannedSteps ? Math.round((steps / plannedSteps) * 100) : null,
+  };
+}
+
+// Sải chân đo thật từ GPS (cm); null nếu dữ liệu chưa đủ tin cậy
+export function measuredStride(meters, steps) {
+  if (!(meters >= 200 && steps >= 200)) return null;
+  const s = (meters * 100) / steps;
+  return s >= 40 && s <= 120 ? s : null;
+}
+
+// Trung bình trượt 5 buổi gần nhất; chưa có thì dùng công thức
+export function effectiveStride(p, measured = []) {
+  const m = measured.slice(-5);
+  return m.length ? m.reduce((a, b) => a + b, 0) / m.length : strideCm(p.height, p.sex);
+}

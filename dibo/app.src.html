@@ -45,6 +45,9 @@ h2{font-size:17px;font-weight:600}
 .stat{background:var(--bg);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat b{font-family:var(--f-display);font-size:19px;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#sumRoute{background:var(--bg);border-radius:10px}
+.route-line{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 .notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
 button,.btn{font:600 15px var(--f-body);border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;cursor:pointer;min-height:46px}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
@@ -140,13 +143,18 @@ nav button[aria-current="page"]{color:var(--accent)}
       <div class="stats">
         <div class="stat"><b id="timer">00:00</b><span>thời gian</span></div>
         <div class="stat"><b id="liveCad">–</b><span>bước/phút</span></div>
-        <div class="stat"><b id="liveKm">0</b><span>km</span></div>
+        <div class="stat"><b id="liveKm">0</b><span id="kmLbl">km</span></div>
       </div>
+      <div class="chips"><span class="chip" id="gpsChip">GPS chưa bật</span><span class="chip sun" id="speedChip" hidden></span><span class="chip warn" id="adviceChip" hidden></span></div>
       <div class="phase" id="phase">Giữ nhịp đều</div>
       <div class="pulse" id="pulse" aria-hidden="true"></div>
       <div class="seg" role="group" aria-label="Tiếng gõ nhịp">
         <button id="metroOff" aria-pressed="true">Tắt gõ nhịp</button>
         <button id="metroOn" aria-pressed="false">Gõ theo nhịp bước</button>
+      </div>
+      <div class="seg" role="group" aria-label="Đọc giọng nói">
+        <button id="voiceOff" aria-pressed="false">Tắt đọc</button>
+        <button id="voiceOn" aria-pressed="true">Đọc nhắc bằng giọng nói</button>
       </div>
       <div class="row">
         <button class="primary" id="runBtn">Bắt đầu</button>
@@ -159,7 +167,10 @@ nav button[aria-current="page"]{color:var(--accent)}
       <ul class="notes"><li>Ngồi xuống chỗ thoáng, uống nước, thở chậm.</li><li>Đau ngực, khó thở, choáng váng không đỡ sau vài phút: gọi cấp cứu <b class="num">115</b>.</li><li>Báo người thân vị trí của bạn.</li></ul>
     </div>
     <div class="card" id="finishCard" hidden>
-      <h2>Ghi lại buổi đi</h2>
+      <h2>Tổng kết buổi đi</h2>
+      <div class="stats" id="sumStats"></div>
+      <div class="muted" id="sumNote" style="font-size:14px"></div>
+      <svg class="chart" id="sumRoute" viewBox="0 0 340 200" role="img" aria-label="Lộ trình buổi đi" hidden></svg>
       <label for="fSteps">Số bước buổi này (đã điền số app đếm; không đếm được thì nhập theo app Sức khỏe)
         <input id="fSteps" type="number" inputmode="numeric" min="0" step="10">
       </label>
@@ -171,7 +182,7 @@ nav button[aria-current="page"]{color:var(--accent)}
         </div></div>
       <button class="primary" id="saveBtn">Lưu buổi đi</button>
     </div>
-    <div class="legal">Số bước đếm bằng cảm biến chuyển động của điện thoại. Giữ màn hình sáng khi đi (app tự giữ); khóa màn hình thì điện thoại ngừng đếm.</div>
+    <div class="legal">Số bước đếm bằng cảm biến chuyển động; quãng đường đo bằng GPS (không có GPS thì tính từ số bước và sải chân). Giữ màn hình sáng khi đi (app tự giữ); khóa màn hình thì điện thoại ngừng đếm.</div>
   </section>
 
   <!-- TUẦN -->
@@ -270,7 +281,7 @@ function stepsOn(k) {
   return S.sessions.filter((s) => s.date === k).reduce((a, s) => a + s.steps, 0) + (+S.extra[k] || 0);
 }
 function lastFeeling() { const s = S.sessions[S.sessions.length - 1]; return s ? s.feeling : null; }
-function stride() { return strideCm(S.profile.height, S.profile.sex); }
+function stride() { return effectiveStride(S.profile, S.strides || []); }
 
 // ---------- Hôm nay ----------
 function renderToday() {
@@ -284,7 +295,7 @@ function renderToday() {
   $("ringFg").setAttribute("stroke-dashoffset", 314.16 * (1 - Math.min(done / S.target, 1)));
   $("extraSteps").value = S.extra[k] || "";
   const wd = today().getDay();
-  const plan = planSession(S.profile, { group: S.group, target: S.target }, done, { weekend: wd === 0 || wd === 6, lastFeeling: lastFeeling() });
+  const plan = planSession(S.profile, { group: S.group, target: S.target, stride: stride() }, done, { weekend: wd === 0 || wd === 6, lastFeeling: lastFeeling() });
   S._plan = plan;
   $("pType").textContent = plan.typeName;
   $("pHow").textContent = plan.how;
@@ -303,6 +314,9 @@ $("extraSteps").addEventListener("change", (e) => { S.extra[dkey(today())] = Mat
 
 // ---------- Đang đi ----------
 let run = { on: false, start: 0, acc: 0, tick: null, metro: false, audio: null, beat: null };
+let coach = freshCoach(true);
+function freshCoach(voice) { return { voice, annKm: 0, annMin: 0, phase: null, devKind: null, devSince: 0, lastAdvice: 0, goalSaid: false }; }
+let track = createGpsTrack(), gps = "off", gpsWatch = null;
 function elapsed() { return run.acc + (run.on ? Date.now() - run.start : 0); }
 function mmss(ms) { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
 function currentCadence() {
@@ -333,7 +347,14 @@ function renderRun() {
   const steps = sessionSteps(), cad = sensor === "on" ? sc.cadence(performance.now() / 1000) : 0;
   $("liveSteps").textContent = steps === null ? "–" : fmt(steps);
   $("liveCad").textContent = cad || "–";
-  $("liveKm").textContent = steps === null ? "–" : (steps * stride() / 100000).toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const d = liveDistance(steps);
+  $("liveKm").textContent = d.km === null ? "–" : d.km.toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  $("kmLbl").textContent = d.src === "gps" ? "km · GPS" : d.src === "buoc" ? "km · theo bước" : "km";
+  $("gpsChip").textContent = { off: "GPS chưa bật", wait: "Đang tìm GPS…", on: "GPS đang đo", denied: "GPS chưa được cho phép", none: "Không có GPS" }[gps];
+  const sp = liveSpeed(cad);
+  $("speedChip").hidden = !sp; if (sp) $("speedChip").textContent = sp.toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " km/h";
+  const adv = run.on && sensor === "on" && sc.walking ? cadenceAdvice(currentCadence().c, cad) : null;
+  $("adviceChip").hidden = !adv; if (adv) $("adviceChip").textContent = adv === "nhanh" ? "Bước nhanh hơn một chút" : "Chậm lại một chút";
   $("sensorTxt").textContent = {
     off: "bước · bấm Bắt đầu để bật cảm biến",
     listening: "bước · đang bật cảm biến…",
@@ -372,29 +393,127 @@ async function keepAwake() {
   try { if (navigator.wakeLock && run.on) wake = await navigator.wakeLock.request("screen"); } catch (e) {}
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
+// ---- GPS ----
+function startGps() {
+  if (gpsWatch !== null) return;
+  if (!navigator.geolocation) { gps = "none"; return; }
+  gps = "wait";
+  try {
+    gpsWatch = navigator.geolocation.watchPosition((pos) => {
+      gps = "on";
+      if (run.on) track.add({ lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy, t: Date.now() / 1000 });
+    }, (err) => { gps = err.code === 1 ? "denied" : (gps === "on" ? "on" : "wait"); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+  } catch (e) { gps = "none"; }
+}
+function stopGps() { if (gpsWatch !== null) { try { navigator.geolocation.clearWatch(gpsWatch); } catch (e) {} gpsWatch = null; } if (gps === "on" || gps === "wait") gps = "off"; }
+// Quãng đường: GPS khi có, không thì từ số bước × sải chân; không có cả hai thì không hiện
+function liveDistance(steps) {
+  if (gps === "on" && track.meters > 0) return { km: track.meters / 1000, src: "gps" };
+  if (steps !== null) return { km: steps * stride() / 100000, src: "buoc" };
+  return { km: null, src: null };
+}
+function liveSpeed(cad) {
+  if (gps === "on") { const v = track.speed(Date.now() / 1000); if (v > 0) return v; }
+  return cad ? cad * stride() * 60 / 100000 : 0;
+}
+
+// ---- Giọng nói ----
+function speak(text) {
+  if (!coach.voice || !window.speechSynthesis) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text); u.lang = "vi-VN"; u.rate = 1;
+    const v = speechSynthesis.getVoices().find((x) => x.lang && x.lang.toLowerCase().startsWith("vi")); if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function setVoice(on) { coach.voice = on; $("voiceOn").setAttribute("aria-pressed", on); $("voiceOff").setAttribute("aria-pressed", !on); if (!on) try { speechSynthesis.cancel(); } catch (e) {} }
+$("voiceOn").addEventListener("click", () => { setVoice(true); speak("Đã bật đọc nhắc"); });
+$("voiceOff").addEventListener("click", () => setVoice(false));
+
+// Nhắc trong lúc đi: mỗi km (có GPS) hoặc mỗi 5 phút; đổi pha; lệch nhịp kéo dài 20 giây; đạt mục tiêu buổi
+function coachTick() {
+  if (!run.on) return;
+  const now = Date.now() / 1000, steps = sessionSteps(), cad = sensor === "on" ? sc.cadence(performance.now() / 1000) : 0;
+  const min = Math.floor(elapsed() / 60000), d = liveDistance(steps);
+  const say = [];
+  if (d.src === "gps") {
+    const k = Math.floor(d.km);
+    if (k > coach.annKm) { coach.annKm = k; say.push(k + " ki lô mét, " + min + " phút" + (cad ? ", nhịp " + cad + " bước một phút" : "")); }
+  } else if (min >= coach.annMin + 5) {
+    coach.annMin = min - (min % 5);
+    say.push(coach.annMin + " phút" + (steps !== null ? ", " + steps + " bước" : "") + (cad ? ", nhịp " + cad + " bước một phút" : ""));
+  }
+  const ph = S._plan.type === "ngatquang" ? currentCadence().label.split(" · ")[0] : null;
+  if (ph && ph !== coach.phase) { if (coach.phase !== null) say.push(ph); coach.phase = ph; }
+  const adv = sensor === "on" && sc.walking ? cadenceAdvice(currentCadence().c, cad) : null;
+  if (adv !== coach.devKind) { coach.devKind = adv; coach.devSince = now; }
+  else if (adv && now - coach.devSince >= 20 && now - coach.lastAdvice >= 60) {
+    coach.lastAdvice = now; say.push(adv === "nhanh" ? "Bước nhanh hơn một chút" : "Chậm lại một chút");
+  }
+  if (!coach.goalSaid && steps !== null && steps >= S._plan.steps) { coach.goalSaid = true; say.push("Đã đạt mục tiêu buổi đi"); }
+  if (say.length) speak(say.join(". "));
+}
+
 // Chỉ trả số bước khi cảm biến thật sự chạy; không bao giờ ước tính.
 function sessionSteps() { return sensor === "on" ? sc.count : null; }
 
 $("runBtn").addEventListener("click", async () => {
-  if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); }
+  if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); }
   else {
     const p = startSensor();
+    startGps();
+    if (!run.acc) speak("Bắt đầu. Mục tiêu " + S._plan.steps + " bước, nhịp " + S._plan.cadence + " bước một phút");
     run.on = true; run.start = Date.now();
     $("finishCard").hidden = true; $("sosCard").hidden = true;
     if (!run.audio) { try { run.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
     try { run.audio && run.audio.resume(); } catch (e) {}
     keepAwake();
-    run.tick = setInterval(renderRun, 500); beatLoop();
+    run.tick = setInterval(() => { renderRun(); coachTick(); }, 500); beatLoop();
     await p;
   }
   renderRun();
 });
-function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); renderRun(); }
+function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); renderRun(); }
 $("endBtn").addEventListener("click", () => {
   stopRun();
   $("fSteps").value = sessionSteps() ?? "";
   $("finishCard").hidden = false;
+  renderSummary();
+  const sm = currentSummary();
+  speak("Kết thúc. " + sm.steps + " bước, " + String(sm.km).replace(".", " phẩy ") + " ki lô mét, " + sm.minutes + " phút");
 });
+$("fSteps").addEventListener("input", renderSummary);
+function currentSummary() {
+  const steps = Math.max(0, +$("fSteps").value || 0);
+  return sessionSummary(S.profile, { steps, seconds: run.acc / 1000, meters: gps === "on" || track.meters > 0 ? track.meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
+}
+function renderSummary() {
+  const m = currentSummary();
+  const items = [[fmt(m.steps), "bước"], [m.km.toLocaleString("vi-VN"), m.kmSource === "gps" ? "km · GPS" : "km · theo bước"], [mmss(m.seconds * 1000), "thời gian"],
+    [m.avgCad || "–", "bước/phút TB"], [m.speed.toLocaleString("vi-VN"), "km/h TB"], [m.kcal, "kcal ước tính"]];
+  const box = $("sumStats"); box.innerHTML = "";
+  items.forEach(([v, l]) => { const d = document.createElement("div"); d.className = "stat"; const b = document.createElement("b"); b.textContent = v; const sp = document.createElement("span"); sp.textContent = l; d.append(b, sp); box.appendChild(d); });
+  const notes = [];
+  if (m.pctPlan !== null) notes.push("Đạt " + m.pctPlan + "% số bước gợi ý (" + fmt(S._plan.steps) + ").");
+  if (m.avgCad) notes.push(cadenceAdvice(S._plan.cadence, m.avgCad) === "nhanh" ? "Nhịp trung bình thấp hơn mục tiêu " + S._plan.cadence + "." : cadenceAdvice(S._plan.cadence, m.avgCad) === "cham" ? "Nhịp trung bình cao hơn mục tiêu " + S._plan.cadence + "." : "Nhịp trung bình đúng mục tiêu.");
+  if (m.kmSource !== "gps") notes.push("Không có GPS nên quãng đường tính từ số bước.");
+  $("sumNote").textContent = notes.join(" ");
+  drawRoute($("sumRoute"), track.points);
+}
+function drawRoute(svg, pts) {
+  // SVG không có thuộc tính .hidden như HTML: phải đặt/bỏ attribute
+  if (!pts || pts.length < 2) { svg.setAttribute("hidden", ""); return; }
+  const lat0 = pts[0].lat * Math.PI / 180;
+  const xy = pts.map((p) => [p.lon * Math.cos(lat0), -p.lat]);
+  const xs = xy.map((p) => p[0]), ys = xy.map((p) => p[1]);
+  const minX = Math.min(...xs), minY = Math.min(...ys), w = Math.max(...xs) - minX || 1e-9, h = Math.max(...ys) - minY || 1e-9;
+  const sc2 = Math.min(310 / w, 170 / h), ox = (340 - w * sc2) / 2, oy = (200 - h * sc2) / 2;
+  const P = xy.map(([x, y]) => [(ox + (x - minX) * sc2).toFixed(1), (oy + (y - minY) * sc2).toFixed(1)]);
+  svg.innerHTML = '<polyline class="route-line" points="' + P.map((p) => p.join(",")).join(" ") + '"></polyline>' +
+    '<circle cx="' + P[0][0] + '" cy="' + P[0][1] + '" r="7" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"></circle>' +
+    '<circle cx="' + P[P.length - 1][0] + '" cy="' + P[P.length - 1][1] + '" r="7" fill="var(--sun)"></circle>';
+  svg.removeAttribute("hidden");
+}
 $("sosBtn").addEventListener("click", () => { stopRun(); $("sosCard").hidden = false; $("finishCard").hidden = !run.acc; if (run.acc) $("fSteps").value = sessionSteps() ?? ""; });
 function setMetro(on) { run.metro = on; $("metroOn").setAttribute("aria-pressed", on); $("metroOff").setAttribute("aria-pressed", !on); }
 $("metroOn").addEventListener("click", () => { setMetro(true); if (!run.audio) { try { run.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } });
@@ -404,10 +523,16 @@ document.querySelectorAll("[data-feel]").forEach((b) => b.addEventListener("clic
   feel = b.dataset.feel; document.querySelectorAll("[data-feel]").forEach((x) => x.setAttribute("aria-pressed", x === b));
 }));
 $("saveBtn").addEventListener("click", () => {
-  const steps = Math.max(0, +$("fSteps").value || 0);
-  S.sessions.push({ date: dkey(today()), steps, minutes: Math.max(1, Math.round(run.acc / 60000)), feeling: feel, type: S._plan.type });
+  const m = currentSummary();
+  const pts = track.points, stepN = Math.max(1, Math.ceil(pts.length / 150));
+  const route = pts.filter((_, i) => i % stepN === 0 || i === pts.length - 1).map((p) => ({ lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5) }));
+  S.sessions.push({ date: dkey(today()), steps: m.steps, minutes: Math.max(1, m.minutes), seconds: m.seconds, km: m.km, kmSource: m.kmSource,
+    avgCad: m.avgCad, kcal: m.kcal, feeling: feel, type: S._plan.type, route });
+  const ms = measuredStride(m.kmSource === "gps" ? track.meters : 0, m.steps);
+  if (ms) { S.strides = (S.strides || []).concat(ms).slice(-5); }
   save();
-  run = { ...run, on: false, acc: 0 }; sc.reset(); $("finishCard").hidden = true; $("sosCard").hidden = true;
+  run = { ...run, on: false, acc: 0 }; sc.reset(); track = createGpsTrack(); stopGps(); coach = freshCoach(coach.voice);
+  $("finishCard").hidden = true; $("sosCard").hidden = true;
   show("homnay");
 });
 
@@ -451,7 +576,7 @@ function renderWeek() {
   S.sessions.slice().reverse().slice(0, 14).forEach((s) => {
     const row = document.createElement("div");
     const a = document.createElement("span"); a.textContent = new Date(s.date + "T12:00:00").toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "numeric" }) + " · " + WALK_TYPES[s.type].name;
-    const b = document.createElement("span"); b.className = "num"; b.textContent = fmt(s.steps) + " bước · " + s.minutes + "′ · " + feelTxt[s.feeling];
+    const b = document.createElement("span"); b.className = "num"; b.textContent = fmt(s.steps) + " bước" + (s.km != null ? " · " + s.km.toLocaleString("vi-VN") + " km" : "") + " · " + s.minutes + "′" + (s.kcal ? " · " + s.kcal + " kcal" : "") + " · " + feelTxt[s.feeling];
     row.append(a, b); h.appendChild(row);
   });
   if (!S.sessions.length) h.textContent = "Chưa có buổi đi nào.";
