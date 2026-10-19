@@ -11,5 +11,7 @@ head = ('<!doctype html><html lang="vi"><head><meta charset="utf-8">'
         'padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body>')
 out = os.path.join(d, '..', 'site', 'dibo', 'index.html')
 os.makedirs(os.path.dirname(out), exist_ok=True)
-open(out, 'w', encoding='utf-8').write(head + src + '</body></html>')
+i = src.index('<style>')  # title, meta, font link đưa vào <head>
+head = head.replace('</head><body>', src[:i] + '</head><body>')
+open(out, 'w', encoding='utf-8').write(head + src[i:] + '</body></html>')
 print('OK', out)
