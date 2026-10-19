@@ -1,0 +1,20 @@
+const { chromium } = require(process.env.PW);
+(async () => {
+  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, permissions: ['geolocation'], geolocation: { latitude: 21.0285, longitude: 105.7787 } });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto('file://' + process.cwd() + '/dist/local.html'); await p.waitForTimeout(800);
+  const vis = () => p.$$eval('.stop-routes', e => e.map(x => !x.hidden));
+  console.log('rows', await p.$$eval('.stop-toggle', e => e.length), 'open', JSON.stringify(await vis()));
+  console.log('near panel height px', await p.$eval('#near', e => Math.round(e.getBoundingClientRect().height)));
+  console.log('order: planner above near?', await p.evaluate(() => document.querySelector('.go').getBoundingClientRect().top < document.getElementById('near').getBoundingClientRect().top));
+  await p.click('.stop-toggle[data-si="0"]'); console.log('tap 0', JSON.stringify(await vis()), 'routes shown', await p.$$eval('.stop-row:first-child .route-line', e => e.length));
+  await p.click('.stop-toggle[data-si="1"]'); console.log('tap 1', JSON.stringify(await vis()));
+  await p.click('.stop-toggle[data-si="1"]'); console.log('tap 1 again', JSON.stringify(await vis()));
+  await p.click('.stop-toggle[data-si="0"]');
+  await p.evaluate(() => document.getElementById('near').scrollIntoView());
+  await p.screenshot({ path: 'shots/near2.png' });
+  await p.click('[data-start="0"]'); console.log('trip still ok', JSON.stringify(await p.evaluate(() => window.__tiktakTrip())));
+  console.log('errors', errs, 'sw', await p.evaluate(() => document.documentElement.scrollWidth));
+  await b.close();
+})();

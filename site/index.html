@@ -149,6 +149,17 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .stop-card .d { color: var(--ink-2); font-size: .85em; margin: 0; }
 .route-line { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
 .route-line p { margin: 0; }
+.stop-rows { display: flex; flex-direction: column; }
+.stop-row { border-top: 1px solid var(--line); }
+.stop-row:first-child { border-top: 0; }
+.stop-toggle { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: none; border: 0; padding: 12px 0; cursor: pointer; min-height: 56px; }
+.st-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.st-name { font-weight: 700; }
+.st-codes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.sign.xs { font-size: .8em; height: 1.6em; min-width: 2.2em; }
+.chev { font-size: 1.1em; color: var(--ink-2); width: 1.2em; text-align: center; }
+.stop-routes { display: flex; flex-direction: column; gap: 8px; padding: 0 0 14px; }
+.stop-row .d, .stop-routes .d { color: var(--ink-2); font-size: .85em; margin: 0; }
 /* Đang đi */
 .trip { position: fixed; inset: 0; z-index: 30; background: var(--bg); overflow-y: auto;
   padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
@@ -209,11 +220,6 @@ footer p { margin: 0; }
 
   <!-- CHỈ ĐƯỜNG -->
   <section id="view-plan" class="wrap" style="gap:18px">
-    <div class="panel" id="near">
-      <div class="near-head"><h2>Gần tôi</h2><button class="btn" id="near-btn">Xem trạm gần tôi</button></div>
-      <p class="hint" id="near-hint">Bấm để xem trạm gần nhất và các xe đi qua. App chỉ dùng vị trí trên máy bạn, không gửi đi đâu.</p>
-      <div id="near-out"></div>
-    </div>
     <div class="panel">
       <div class="points">
         <div class="stack">
@@ -242,6 +248,11 @@ footer p { margin: 0; }
       <p class="err" id="plan-err" hidden></p>
     </div>
     <div class="results" id="results"></div>
+    <div class="panel" id="near">
+      <div class="near-head"><h2>Gần tôi</h2><button class="btn" id="near-btn">Xem trạm gần tôi</button></div>
+      <p class="hint" id="near-hint">Bấm để xem trạm gần nhất và các xe đi qua. App chỉ dùng vị trí trên máy bạn, không gửi đi đâu.</p>
+      <div id="near-out"></div>
+    </div>
     <div class="panel" id="voice-help" hidden>
       <p style="margin:0"><b>Để giọng đọc tự nhiên hơn</b></p>
       <p class="hint">iPhone: Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Việt → tải giọng <b>Linh (Nâng cao)</b>.<br>Android: Cài đặt → Hệ thống → Ngôn ngữ → Đầu ra chuyển văn bản thành giọng nói → chọn <b>Google</b>, tải gói Tiếng Việt.</p>
@@ -883,7 +894,7 @@ footer p { margin: 0; }
   // ================= GẦN TÔI =================
   function renderNear(pos) {
     var out = $('near-out'), list = eng.near(pos, 700), seen = {}, stops = [];
-    for (var i = 0; i < list.length && stops.length < 3; i++) {
+    for (var i = 0; i < list.length && stops.length < 4; i++) {
       var id = list[i][0], nm = clean(data.stops[id][0]), key = E.norm(nm);
       if (seen[key]) continue; seen[key] = 1;
       var routes = eng.routesAt(id, 25);
@@ -904,20 +915,33 @@ footer p { margin: 0; }
     if (!stops.length) {
       out.innerHTML = '<p class="err">Không có trạm xe buýt nào trong khoảng 700 m quanh bạn.</p>' + actions;
     } else {
-      out.innerHTML = stops.map(function (st) {
+      out.innerHTML = '<div class="stop-rows">' + stops.map(function (st, si) {
         var side = sideHint(st.raw);
-        return '<div class="stop-card"><p class="t">' + esc(st.name) + '</p>' +
-          '<p class="d">Cách khoảng ' + m(st.d) + (side ? ' · ' + side : '') + ' · <a class="link" href="' + mapLink(data.stops[st.id].slice(1)) + '" target="_blank" rel="noopener">Bản đồ</a></p>' +
-          st.routes.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (r, ri) {
-            var sv = eng.service(r.routeId, r.dir, now);
-            return '<div class="route-line"' + (ri >= 4 ? ' data-more hidden' : '') + '><span class="sign sm">' + esc(r.code) + '</span>' +
-              '<p><b>→ ' + esc(r.toward) + '</b> <span class="d">· ' + shortStatus(sv) + '</span></p></div>';
-          }).join('') + (st.routes.length > 4 ? '<button class="link" data-showmore>Xem thêm ' + (st.routes.length - 4) + ' tuyến</button>' : '') +
-          '</div>';
-      }).join('') + actions;
+        var running = st.routes.filter(function (r) { var t = eng.service(r.routeId, r.dir, now).state; return t === 'running' || t === 'ending'; }).length;
+        var codes = st.routes.map(function (r) { return r.code; }).filter(function (c, k, arr) { return arr.indexOf(c) === k; });
+        return '<div class="stop-row">' +
+          '<button class="stop-toggle" aria-expanded="false" data-si="' + si + '">' +
+            '<span class="st-main"><span class="st-name">' + esc(st.name) + '</span>' +
+            '<span class="d">' + m(st.d) + ' · ' + codes.length + ' tuyến' + (running ? ', ' + running + ' lượt đang chạy' : '') + '</span>' +
+            '<span class="st-codes">' + codes.slice(0, 6).map(function (c) { return '<span class="sign xs">' + esc(c) + '</span>'; }).join('') + (codes.length > 6 ? '<span class="d">+' + (codes.length - 6) + '</span>' : '') + '</span></span>' +
+            '<span class="chev" aria-hidden="true">▸</span></button>' +
+          '<div class="stop-routes" hidden>' +
+            (side ? '<p class="d">' + side + '</p>' : '') +
+            st.routes.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (r) {
+              var sv = eng.service(r.routeId, r.dir, now);
+              return '<div class="route-line"><span class="sign sm">' + esc(r.code) + '</span>' +
+                '<p><b>→ ' + esc(r.toward) + '</b> <span class="d">· ' + shortStatus(sv) + '</span></p></div>';
+            }).join('') +
+            '<p class="d"><a class="link" href="' + mapLink(data.stops[st.id].slice(1)) + '" target="_blank" rel="noopener">Xem bến trên bản đồ</a></p>' +
+          '</div></div>';
+      }).join('') + '</div>' + actions;
     }
-    out.querySelectorAll('[data-showmore]').forEach(function (b) {
-      b.onclick = function () { b.parentNode.querySelectorAll('[data-more]').forEach(function (x) { x.hidden = false; }); b.remove(); };
+    out.querySelectorAll('.stop-toggle').forEach(function (btn) {
+      btn.onclick = function () {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        out.querySelectorAll('.stop-toggle').forEach(function (o) { o.setAttribute('aria-expanded', 'false'); o.nextElementSibling.hidden = true; o.querySelector('.chev').textContent = '▸'; });
+        if (!open) { btn.setAttribute('aria-expanded', 'true'); btn.nextElementSibling.hidden = false; btn.querySelector('.chev').textContent = '▾'; }
+      };
     });
     $('near-hint').hidden = true;
     $('near-btn').textContent = 'Cập nhật vị trí';
