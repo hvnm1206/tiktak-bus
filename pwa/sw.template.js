@@ -8,6 +8,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  // Các app khác đặt chung tên miền (vd /dibo/) tự lo bộ nhớ đệm của mình.
+  if (new URL(req.url).pathname.startsWith('/dibo/')) return;
   // Mạng trước cho trang chính (để nhận dữ liệu mới), rơi về cache khi mất mạng.
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
