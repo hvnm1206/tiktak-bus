@@ -1,5 +1,5 @@
 // Tiktak Bus service worker: cache trang + dữ liệu để chạy khi mạng yếu.
-const CACHE = 'tiktak-bus-5f7de558e5';
+const CACHE = 'tiktak-bus-caf210bbe7';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

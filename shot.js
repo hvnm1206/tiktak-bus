@@ -17,6 +17,7 @@ const { chromium } = require(process.env.PW);
       await page.fill('#from', 'từ Hồ Gươm về bến xe Mỹ Đình'); await page.fill('#to', '');
       await page.click('#go'); await page.waitForTimeout(300);
       console.log('sentence ->', await page.inputValue('#from'), '|', await page.inputValue('#to'), '| opts', await page.$$eval('.opt', e => e.length), '| err', await page.$eval('#plan-err', e => e.hidden ? '' : e.textContent));
+      if (await page.$('[data-pick="0"]')) { await page.click('[data-pick="0"]'); await page.waitForTimeout(200); console.log('picked from chooser, opts', await page.$$eval('.opt', e => e.length)); }
       await page.click('[data-mode="lesswalk"]'); await page.waitForTimeout(200);
       await page.click('[data-stops="0:0"]');
       await page.screenshot({ path: 'shots/light-sentence.png', fullPage: true });
@@ -26,7 +27,7 @@ const { chromium } = require(process.env.PW);
       await page.click('#stopq-sug button'); await page.waitForTimeout(150);
       console.log('stop rows', await page.$$eval('#stop-out .row', e => e.length));
       await page.screenshot({ path: 'shots/light-stop.png', fullPage: true });
-      await page.click('#tab-route'); await page.fill('#routeq', '32'); await page.waitForTimeout(200);
+      await page.click('#tab-plan'); await page.click('#tab-route'); await page.fill('#routeq', '32'); await page.waitForTimeout(200);
       console.log('route dirs', await page.$$eval('#route-out .dirs > div', e => e.length));
       await page.screenshot({ path: 'shots/light-route.png' });
       const sw = await page.evaluate(() => document.documentElement.scrollWidth); console.log('scrollWidth', sw);

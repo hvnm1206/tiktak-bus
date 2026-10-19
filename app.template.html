@@ -4,222 +4,313 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
-/* Layout: một cột như cuốn sổ tay đi xe; biển số tuyến kiểu bảng LED đầu xe là điểm nhấn duy nhất */
+/* Mẫu A "Mềm mại": dải xanh chào hỏi, thẻ tìm đường nổi, biểu tượng trong ô màu nhạt; biển số tuyến kiểu LED giữ làm dấu nhận diện */
 :root {
-  --bg: #eef3f8;
+  --bg: #f3f6fb;
   --surface: #ffffff;
-  --surface-2: #e3ebf3;
-  --ink: #0f2233;
-  --ink-2: #4a5d6e;
-  --line: #cfdbe6;
-  --accent: #0b5cad;        /* xanh xe buýt */
+  --surface-2: #eef3f9;
+  --ink: #13243a;
+  --ink-2: #5b6b80;
+  --line: #e3eaf3;
+  --accent: #0b5cad;
+  --accent-2: #e8f1fc;
   --accent-ink: #ffffff;
-  --sign-bg: #10161c;       /* bảng LED đầu xe */
+  --band-1: #0b5cad; --band-2: #1f86df;
+  --sign-bg: #10161c;
   --sign-fg: #ffb81c;
-  --walk: #1d7a55;
+  --walk: #17834f;
+  --t-green-bg: #e3f6ec; --t-green: #17834f;
+  --t-blue-bg: #e8f1fc;  --t-blue: #0b5cad;
+  --t-amber-bg: #fff3dc; --t-amber: #9a6200;
+  --t-violet-bg: #f0eafd; --t-violet: #6b3fc4;
+  --t-red-bg: #fde9e7; --t-red: #c0392b;
   --warn-bg: #fff1d6; --warn-fg: #7a4a00;
   --stop-bg: #fde3e1; --stop-fg: #8f1d14;
   --ok-bg: #dff3e9;  --ok-fg: #13583c;
+  --shadow: 0 10px 30px rgb(19 36 58 / .10);
+  --shadow-sm: 0 4px 14px rgb(19 36 58 / .06);
   --focus: #ffb81c;
   --font-ui: "Be Vietnam Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-sign: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --fs: 18px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0b141c; --surface: #13202b; --surface-2: #1b2b38; --ink: #e8f0f7; --ink-2: #9fb2c3; --line: #263949;
-  --accent: #4ea3f5; --accent-ink: #06121d; --sign-bg: #05090d; --sign-fg: #ffc23d; --walk: #5cc79b;
+  --bg: #0b141c; --surface: #14212c; --surface-2: #1b2b38; --ink: #e8f0f7; --ink-2: #9fb2c3; --line: #253747;
+  --accent: #4ea3f5; --accent-2: #17324b; --accent-ink: #06121d; --band-1: #0a3f78; --band-2: #135ea8;
+  --sign-bg: #05090d; --sign-fg: #ffc23d; --walk: #5cc79b;
+  --t-green-bg: #123628; --t-green: #6fd3a5; --t-blue-bg: #17324b; --t-blue: #7cbcf7;
+  --t-amber-bg: #3a2c10; --t-amber: #ffcf7a; --t-violet-bg: #2a2246; --t-violet: #c3a8ff; --t-red-bg: #3e1714; --t-red: #ff9d92;
   --warn-bg: #3a2c10; --warn-fg: #ffd58a; --stop-bg: #3e1714; --stop-fg: #ffb4ab; --ok-bg: #12352a; --ok-fg: #8fe0bb;
+  --shadow: 0 10px 30px rgb(0 0 0 / .35); --shadow-sm: 0 4px 14px rgb(0 0 0 / .25);
   color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0b141c; --surface: #13202b; --surface-2: #1b2b38; --ink: #e8f0f7; --ink-2: #9fb2c3; --line: #263949;
-  --accent: #4ea3f5; --accent-ink: #06121d; --sign-bg: #05090d; --sign-fg: #ffc23d; --walk: #5cc79b;
+  --bg: #0b141c; --surface: #14212c; --surface-2: #1b2b38; --ink: #e8f0f7; --ink-2: #9fb2c3; --line: #253747;
+  --accent: #4ea3f5; --accent-2: #17324b; --accent-ink: #06121d; --band-1: #0a3f78; --band-2: #135ea8;
+  --sign-bg: #05090d; --sign-fg: #ffc23d; --walk: #5cc79b;
+  --t-green-bg: #123628; --t-green: #6fd3a5; --t-blue-bg: #17324b; --t-blue: #7cbcf7;
+  --t-amber-bg: #3a2c10; --t-amber: #ffcf7a; --t-violet-bg: #2a2246; --t-violet: #c3a8ff; --t-red-bg: #3e1714; --t-red: #ff9d92;
   --warn-bg: #3a2c10; --warn-fg: #ffd58a; --stop-bg: #3e1714; --stop-fg: #ffb4ab; --ok-bg: #12352a; --ok-fg: #8fe0bb;
+  --shadow: 0 10px 30px rgb(0 0 0 / .35); --shadow-sm: 0 4px 14px rgb(0 0 0 / .25);
   color-scheme: dark }
 html.big { --fs: 21px; }
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: var(--fs); line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: var(--fs); line-height: 1.5;
+  -webkit-font-smoothing: antialiased; padding-bottom: 48px; }
+.page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+p { margin: 0; }
+svg.i { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: -.25em; }
 
-/* Header */
-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px 2px; }
+/* Dải đầu trang */
+.band { background: linear-gradient(160deg, var(--band-1) 0%, var(--band-2) 100%); color: #fff; border-radius: 0 0 28px 28px;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 74px max(20px, env(safe-area-inset-left, 0px)); }
+.band-in { max-width: 640px; margin: 0 auto; }
+.band .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark { background: var(--sign-bg); color: var(--sign-fg); font-family: var(--font-sign); font-weight: 700; font-size: 1.15em;
-  padding: 2px 10px; border-radius: 6px; letter-spacing: .04em; }
-.brand h1 { font-size: 1.35em; margin: 0; font-weight: 800; letter-spacing: -.01em; }
-.textsize { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 700; cursor: pointer; min-height: 44px; }
-.textsize[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.brand-mark { width: 40px; height: 40px; border-radius: 12px; background: rgb(255 255 255 / .18); display: grid; place-items: center; }
+.brand h1 { font-size: 1.2em; margin: 0; font-weight: 800; letter-spacing: -.01em; }
+.textsize { border: 0; background: rgb(255 255 255 / .18); color: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 700; cursor: pointer; min-height: 44px; font-size: .85em; }
+.textsize[aria-pressed="true"] { background: #fff; color: var(--band-1); }
+.hello { margin-top: 18px; font-size: .88em; opacity: .9; }
+.hello b { display: block; font-size: 1.4em; margin-top: 2px; opacity: 1; font-weight: 800; letter-spacing: -.01em; line-height: 1.25; }
+.back { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; border: 0; background: rgb(255 255 255 / .18); color: #fff;
+  border-radius: 999px; padding: 6px 14px 6px 10px; font-weight: 700; min-height: 44px; cursor: pointer; font-size: .85em; }
+.back svg.i { transform: rotate(180deg); }
+.lift { margin-top: -56px; position: relative; }
 
-/* Tabs */
-.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 14px; }
-.tabs button { border: 0; background: transparent; padding: 10px 6px; border-radius: 10px; font-weight: 600; cursor: pointer; min-height: 48px; }
-.tabs button[aria-selected="true"] { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+/* Thẻ */
+.panel { background: var(--surface); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-sm); }
+.panel.hero { box-shadow: var(--shadow); }
+.sec { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 6px 4px -6px; }
+.sec h2 { margin: 0; font-size: 1.05em; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.sec .more { border: 0; background: none; color: var(--accent); font-weight: 700; cursor: pointer; min-height: 44px; padding: 0 4px; font-size: .85em; display: inline-flex; align-items: center; gap: 6px; }
 
-/* Planner card */
-.panel { background: var(--surface); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; border: 1px solid var(--line); }
+/* Ô nhập */
 .field { position: relative; display: flex; flex-direction: column; gap: 6px; }
-.field label { font-weight: 700; font-size: .85em; color: var(--ink-2); letter-spacing: .02em; }
-.field input { width: 100%; min-height: 56px; border: 2px solid var(--line); background: var(--bg); border-radius: 12px; padding: 10px 14px; }
-.field input:focus { border-color: var(--accent); outline: none; }
+.field > label { font-weight: 600; font-size: .78em; color: var(--ink-2); }
+.field input { width: 100%; min-height: 54px; border: 2px solid transparent; background: var(--surface-2); border-radius: 14px; padding: 10px 14px; font-weight: 600; }
+.field input::placeholder { color: var(--ink-2); font-weight: 400; opacity: .85; }
+.field input:focus { border-color: var(--accent); background: var(--surface); outline: none; }
 .inwrap { position: relative; display: block; }
-.inwrap input { padding-right: 56px; }
-.clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; border-radius: 50%;
-  background: var(--surface-2); color: var(--ink-2); font-size: 1.25em; line-height: 1; cursor: pointer; display: grid; place-items: center; }
-.clear:hover { color: var(--ink); }
-.points { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.inwrap input { padding-right: 52px; }
+.clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-2); font-size: 1.35em; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.clear:hover { background: var(--line); color: var(--ink); }
+.pt { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
+.pt .dot { margin-top: 30px; }
+.points { position: relative; }
+.dotcol { display: flex; flex-direction: column; align-items: center; justify-content: space-between; align-self: stretch; padding-top: 30px; gap: 8px; }
+.dotcol .dot { margin-top: 0; }
 .points .stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.swap { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); cursor: pointer; font-size: 1.2em; }
-.suggest { background: var(--surface); border: 2px solid var(--accent); border-radius: 12px; overflow: hidden; }
-.suggest button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 14px; cursor: pointer; min-height: 52px; }
+.swap { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent-2); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
+.dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.dot.from { background: var(--t-green-bg); color: var(--t-green); }
+.dot.to { background: var(--t-red-bg); color: var(--t-red); }
+.suggest { background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; overflow: hidden; }
+.suggest button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 14px; cursor: pointer; min-height: 52px; }
+.suggest button svg.i { color: var(--ink-2); }
 .suggest button:last-child { border-bottom: 0; }
 .suggest button:hover, .suggest button:focus { background: var(--surface-2); }
 .saved { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 44px; font-weight: 600; }
-.chip.ghost { border-style: dashed; color: var(--ink-2); font-weight: 500; }
-.modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-@media (min-width: 520px) { .modes { grid-template-columns: repeat(4, 1fr); } }
-.modes button { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 6px; font-weight: 600; cursor: pointer; min-height: 52px; }
-.modes button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
-.go { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 1.1em; border-radius: 14px; min-height: 60px; cursor: pointer; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 0; background: var(--surface-2); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 44px; font-weight: 600; font-size: .9em; }
+.chip.ghost { background: transparent; box-shadow: inset 0 0 0 2px var(--line); color: var(--ink-2); font-weight: 500; }
+.chip.loc { background: var(--t-green-bg); color: var(--t-green); }
+.modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+html.big .modes { grid-template-columns: repeat(2, 1fr); }
+.modes button { border: 0; background: var(--surface-2); color: var(--ink-2); border-radius: 999px; padding: 8px 4px; font-weight: 600; cursor: pointer; min-height: 44px; font-size: .82em; line-height: 1.2; }
+.modes button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.go { display: flex; align-items: center; justify-content: center; gap: 10px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 1.05em; border-radius: 16px; min-height: 58px; cursor: pointer; box-shadow: 0 6px 16px rgb(11 92 173 / .28); }
 .hint { color: var(--ink-2); font-size: .85em; margin: 0; }
-.err { background: var(--stop-bg); color: var(--stop-fg); border-radius: 12px; padding: 12px 14px; margin: 0; }
+.err { background: var(--stop-bg); color: var(--stop-fg); border-radius: 14px; padding: 12px 14px; margin: 0; }
 
-/* Results */
+/* Lối tắt */
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.quick button { display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; cursor: pointer; padding: 4px 0; font-weight: 600; font-size: .78em; text-align: center; line-height: 1.25; color: var(--ink); }
+.quick .ic { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; }
+.quick .ic svg.i { width: 26px; height: 26px; }
+.ic.green { background: var(--t-green-bg); color: var(--t-green); }
+.ic.blue { background: var(--t-blue-bg); color: var(--t-blue); }
+.ic.amber { background: var(--t-amber-bg); color: var(--t-amber); }
+.ic.violet { background: var(--t-violet-bg); color: var(--t-violet); }
+
+/* Kết quả */
 .results { display: flex; flex-direction: column; gap: 14px; }
-.results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.results-head h2 { margin: 0; font-size: 1.1em; }
-.tag { font-size: .75em; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
-.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
-.opt.best { border: 2px solid var(--accent); }
-.opt-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 16px; background: var(--surface-2); }
-.opt-top .sum { color: var(--ink-2); font-size: .9em; }
+.results:empty { display: none; }
+.results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 4px 4px 0; }
+.results-head h2 { margin: 0; font-size: 1.05em; font-weight: 800; }
+.tag { font-size: .7em; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.opt-top .tag { background: var(--accent); color: var(--accent-ink); padding: 3px 10px; border-radius: 999px; letter-spacing: .04em; }
+.opt { background: var(--surface); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.opt.best { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.opt-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 16px; background: var(--accent-2); }
+.opt-top .sum { color: var(--ink-2); font-size: .85em; font-weight: 500; }
 .sign { display: inline-flex; align-items: center; justify-content: center; min-width: 2.6em; height: 1.9em; padding: 0 .4em; background: var(--sign-bg); color: var(--sign-fg);
-  font-family: var(--font-sign); font-weight: 700; font-size: 1.35em; border-radius: 6px; letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+  font-family: var(--font-sign); font-weight: 700; font-size: 1.35em; border-radius: 7px; letter-spacing: .03em; font-variant-numeric: tabular-nums; }
 .sign.sm { font-size: 1.05em; height: 1.75em; }
 .arrow { color: var(--ink-2); font-weight: 700; }
 .steps { list-style: none; margin: 0; padding: 6px 16px 4px; }
-.step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.step { display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .step:last-child { border-bottom: 0; }
-.dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .85em; }
-.dot.walk { background: var(--ok-bg); color: var(--walk); }
-.dot.bus { background: var(--sign-bg); color: var(--sign-fg); font-family: var(--font-sign); }
-.step p { margin: 0; }
+.step .dot { width: 38px; height: 38px; border-radius: 12px; }
+.dot.walk { background: var(--t-green-bg); color: var(--t-green); }
+.dot.bus { background: var(--sign-bg); color: var(--sign-fg); }
+.dot.xfer { background: var(--t-amber-bg); color: var(--t-amber); }
+.dot.end { background: var(--t-red-bg); color: var(--t-red); }
 .step .main { font-weight: 600; }
 .step .sub { color: var(--ink-2); font-size: .88em; margin-top: 2px; }
 .place { font-weight: 700; }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.badges:empty { display: none; }
 .badge { font-size: .78em; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
 .badge.ok { background: var(--ok-bg); color: var(--ok-fg); }
 .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
 .badge.stop { background: var(--stop-bg); color: var(--stop-fg); }
-.link { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; font-size: .88em; }
+.link { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 600; text-decoration: none; background: none; border: 0; padding: 4px 0; cursor: pointer; font-size: .88em; }
+.link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .stoplist { margin: 8px 0 0; padding-left: 1.4em; color: var(--ink-2); font-size: .88em; }
 .stoplist li { padding: 2px 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 16px; }
-.btn { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 14px; font-weight: 600; cursor: pointer; min-height: 48px; }
-.btn:hover { border-color: var(--accent); }
-/* Gần tôi */
-.near-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.near-head h2 { margin: 0; font-size: 1.1em; }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.big-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.big-actions .btn { min-height: 56px; font-size: 1em; }
-.stop-card { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.stop-card:first-of-type { border-top: 0; padding-top: 0; }
-.stop-card .t { font-weight: 700; margin: 0; }
-.stop-card .d { color: var(--ink-2); font-size: .85em; margin: 0; }
-.route-line { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
-.route-line p { margin: 0; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px 16px 16px; }
+.actions .primary { grid-column: 1 / -1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: var(--surface-2); border-radius: 14px; padding: 8px 14px; font-weight: 700; cursor: pointer; min-height: 48px; font-size: .92em; }
+.btn:hover { background: var(--line); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); min-height: 54px; font-size: 1em; }
+.btn.primary:hover { filter: brightness(1.06); }
+.big-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.big-actions .btn { min-height: 56px; }
+
+/* Bến gần bạn */
 .stop-rows { display: flex; flex-direction: column; }
 .stop-row { border-top: 1px solid var(--line); }
 .stop-row:first-child { border-top: 0; }
-.stop-toggle { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: none; border: 0; padding: 12px 0; cursor: pointer; min-height: 56px; }
-.st-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.stop-toggle { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: none; border: 0; padding: 12px 0; cursor: pointer; min-height: 60px; }
+.pin { width: 42px; height: 42px; border-radius: 13px; background: var(--accent-2); color: var(--accent); display: grid; place-items: center; flex: none; }
+.st-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .st-name { font-weight: 700; }
-.st-codes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.sign.xs { font-size: .8em; height: 1.6em; min-width: 2.2em; }
-.chev { font-size: 1.1em; color: var(--ink-2); width: 1.2em; text-align: center; }
-.stop-routes { display: flex; flex-direction: column; gap: 8px; padding: 0 0 14px; }
+.st-codes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 2px; }
+.sign.xs { font-size: .8em; height: 1.6em; min-width: 2.2em; border-radius: 5px; }
+.chev { color: var(--ink-2); display: grid; place-items: center; transition: transform .15s; }
+.stop-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.stop-routes { display: flex; flex-direction: column; gap: 8px; padding: 0 0 14px 54px; }
 .stop-row .d, .stop-routes .d { color: var(--ink-2); font-size: .85em; margin: 0; }
+.route-line { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
+
 /* Đang đi */
 .trip { position: fixed; inset: 0; z-index: 30; background: var(--bg); overflow-y: auto;
   padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .trip-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .trip-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.trip-top b { display: flex; align-items: center; gap: 10px; font-size: 1.1em; font-weight: 800; }
+.trip-top b .brand-mark { background: var(--accent); color: var(--accent-ink); }
 .trip-progress { display: flex; gap: 6px; }
 .trip-progress span { flex: 1; height: 8px; border-radius: 4px; background: var(--line); }
 .trip-progress span.done { background: var(--walk); }
 .trip-progress span.cur { background: var(--accent); }
-.trip-card { background: var(--surface); border: 2px solid var(--accent); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.trip-step { color: var(--ink-2); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; font-size: .8em; margin: 0; }
+.trip-card { background: var(--surface); border-radius: 24px; padding: 22px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.trip-step { color: var(--ink-2); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; font-size: .78em; margin: 0; display: flex; align-items: center; gap: 8px; }
 .trip-title { font-size: 1.45em; font-weight: 800; line-height: 1.3; margin: 0; text-wrap: balance; }
 .trip-big { font-size: 2.6em; font-weight: 800; line-height: 1.1; margin: 0; color: var(--accent); font-variant-numeric: tabular-nums; }
 .trip-note { margin: 0; color: var(--ink-2); }
-.trip-alert { background: var(--warn-bg); color: var(--warn-fg); border-radius: 12px; padding: 12px 14px; font-weight: 700; margin: 0; }
-.trip-done { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--walk); }
+.trip-alert { background: var(--warn-bg); color: var(--warn-fg); border-radius: 14px; padding: 12px 14px; font-weight: 700; margin: 0; display: flex; gap: 8px; align-items: center; }
+.trip-done { box-shadow: 0 0 0 2px var(--walk), var(--shadow); background: var(--ok-bg); color: var(--ok-fg); }
 .ride-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.ride-list li { padding: 8px 12px; border-radius: 10px; color: var(--ink-2); }
+.ride-list li { padding: 8px 12px; border-radius: 12px; color: var(--ink-2); }
 .ride-list li.cur { background: var(--surface-2); color: var(--ink); font-weight: 700; }
 .ride-list li.dest { color: var(--accent); font-weight: 800; }
 .trip-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .trip-btns .btn { min-height: 56px; }
-.trip-btns .wide { grid-column: 1 / -1; }
-.gps-state { font-size: .8em; color: var(--ink-2); margin: 0; }
-.walkonly { background: var(--ok-bg); color: var(--ok-fg); border-radius: 14px; padding: 14px 16px; margin: 0; font-weight: 600; }
+.trip-btns .wide { grid-column: 1 / -1; min-height: 62px; font-size: 1.05em; }
+.gps-state { font-size: .8em; color: var(--ink-2); margin: 0; display: flex; align-items: center; gap: 6px; }
+.walkonly { background: var(--ok-bg); color: var(--ok-fg); border-radius: 16px; padding: 14px 16px; margin: 0; font-weight: 600; }
 
-/* Stop / route lookup */
+/* Xe qua trạm / Tra tuyến */
 .list { display: flex; flex-direction: column; }
 .row { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .row:last-child { border-bottom: 0; }
-.row p { margin: 0; }
 .row .sub { color: var(--ink-2); font-size: .85em; }
 .dirs { display: grid; gap: 14px; }
 @media (min-width: 560px) { .dirs { grid-template-columns: 1fr 1fr; } }
-.dirs h3 { margin: 0 0 6px; font-size: 1em; }
+.dirs h3 { margin: 0 0 6px; font-size: 1em; display: flex; align-items: center; gap: 8px; }
 .dirs ol { margin: 0; padding-left: 1.5em; font-size: .9em; }
 .dirs li { padding: 3px 0; }
+.route-head { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--accent-2); border-radius: 16px; }
 
-footer { color: var(--ink-2); font-size: .8em; display: flex; flex-direction: column; gap: 6px; padding-top: 6px; }
-footer p { margin: 0; }
+footer { color: var(--ink-2); font-size: .78em; display: flex; flex-direction: column; gap: 6px; padding: 6px 4px 0; }
+footer p { display: flex; gap: 8px; }
+footer svg.i { margin-top: .15em; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
-  padding: 12px 18px; border-radius: 12px; font-weight: 600; z-index: 20; max-width: calc(100% - 32px); }
-.copybox { width: 100%; min-height: 120px; border: 2px solid var(--accent); border-radius: 12px; padding: 10px; background: var(--bg); }
+  padding: 12px 18px; border-radius: 14px; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+.copybox { width: 100%; min-height: 120px; border: 2px solid var(--accent); border-radius: 14px; padding: 10px; background: var(--bg); }
 @media (prefers-reduced-motion: no-preference) { .opt { animation: rise .25s ease-out both; } @keyframes rise { from { transform: translateY(6px); } to { transform: none; } } }
 </style>
 
-<div class="wrap">
-  <header>
-    <div class="brand"><span class="brand-mark">BUS</span><h1>Tiktak Bus</h1></div>
-    <button class="textsize" id="textsize" aria-pressed="false" title="Phóng to chữ">A+ Chữ to</button>
-  </header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 20V4M7 4 4 7M7 4l3 3M17 4v16M17 20l-3-3M17 20l3-3"/></symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18v3M16 18v3"/><circle cx="8.5" cy="14.5" r=".8"/><circle cx="15.5" cy="14.5" r=".8"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7M5 10v10h14V10M10 20v-5h4v5"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><path d="M12 11v10M8 21h8"/><rect x="6" y="3" width="12" height="8" rx="2"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3M9 12l1-4 4 1 2 3 3 1M10 8l-3 2-1 3"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8-8-2z"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17v.5"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+</svg>
 
-  <nav class="tabs" role="tablist">
-    <button role="tab" id="tab-plan" aria-selected="true" data-tab="plan">Chỉ đường</button>
-    <button role="tab" id="tab-stop" aria-selected="false" data-tab="stop">Xe qua trạm</button>
-    <button role="tab" id="tab-route" aria-selected="false" data-tab="route">Tra tuyến</button>
-  </nav>
+<div class="band">
+  <div class="band-in">
+    <div class="top">
+      <div class="brand"><span class="brand-mark"><svg class="i"><use href="#i-bus"/></svg></span><h1>Tiktak Bus</h1></div>
+      <button class="textsize" id="textsize" aria-pressed="false" title="Phóng to chữ">A+ Chữ to</button>
+    </div>
+    <p class="hello" id="hello">Xin chào<b>Hôm nay bạn đi đâu?</b></p>
+    <button class="back" id="tab-plan" data-tab="plan" hidden><svg class="i"><use href="#i-arrow"/></svg>Về Chỉ đường</button>
+  </div>
+</div>
 
+<div class="page">
+<div class="wrap lift">
   <!-- CHỈ ĐƯỜNG -->
-  <section id="view-plan" class="wrap" style="gap:18px">
-    <div class="panel">
+  <section id="view-plan" class="wrap">
+    <div class="panel hero">
       <div class="points">
         <div class="stack">
-          <div class="field">
-            <label for="from">Đi từ</label>
-            <input id="from" autocomplete="off" placeholder="Tên trạm, đường, bệnh viện… hoặc gõ: từ A về B">
-            <div class="suggest" id="from-sug" hidden></div>
-            <button type="button" class="chip" id="gps" style="align-self:flex-start">Dùng vị trí của tôi</button>
+          <div class="pt">
+            <div class="dotcol"><span class="dot from" aria-hidden="true"><svg class="i"><use href="#i-locate"/></svg></span>
+              <button class="swap" id="swap" title="Đổi chiều" aria-label="Đổi điểm đi và điểm đến"><svg class="i"><use href="#i-swap"/></svg></button></div>
+            <div class="field">
+              <label for="from">Đi từ</label>
+              <input id="from" autocomplete="off" placeholder="Tên trạm, đường, bệnh viện…">
+              <div class="suggest" id="from-sug" hidden></div>
+              <button type="button" class="chip loc" id="gps" style="align-self:flex-start"><svg class="i"><use href="#i-locate"/></svg><span>Dùng vị trí của tôi</span></button>
+            </div>
           </div>
-          <div class="field">
-            <label for="to">Đến</label>
-            <input id="to" autocomplete="off" placeholder="Muốn đến đâu?">
-            <div class="suggest" id="to-sug" hidden></div>
+          <div class="pt">
+            <span class="dot to" aria-hidden="true"><svg class="i"><use href="#i-pin"/></svg></span>
+            <div class="field">
+              <label for="to">Đến</label>
+              <input id="to" autocomplete="off" placeholder="Muốn đến đâu?">
+              <div class="suggest" id="to-sug" hidden></div>
+            </div>
           </div>
         </div>
-        <button class="swap" id="swap" title="Đổi chiều" aria-label="Đổi điểm đi và điểm đến">⇅</button>
       </div>
       <div class="saved" id="saved"></div>
       <div class="modes" role="group" aria-label="Ưu tiên">
@@ -228,28 +319,40 @@ footer p { margin: 0; }
         <button data-mode="lessxfer" aria-pressed="false">Ít đổi xe</button>
         <button data-mode="lessstop" aria-pressed="false">Ít trạm</button>
       </div>
-      <button class="go" id="go">Chỉ đường cho tôi</button>
+      <button class="go" id="go"><svg class="i"><use href="#i-search"/></svg>Chỉ đường cho tôi</button>
       <p class="err" id="plan-err" hidden></p>
     </div>
+
+    <nav class="quick" aria-label="Lối tắt">
+      <button id="tile-home"><span class="ic green"><svg class="i"><use href="#i-home"/></svg></span><span id="tile-home-t">Về nhà</span></button>
+      <button id="tile-near"><span class="ic blue"><svg class="i"><use href="#i-locate"/></svg></span>Gần tôi</button>
+      <button id="tab-stop" data-tab="stop"><span class="ic amber"><svg class="i"><use href="#i-stop"/></svg></span>Xe qua trạm</button>
+      <button id="tab-route" data-tab="route"><span class="ic violet"><svg class="i"><use href="#i-route"/></svg></span>Tra tuyến</button>
+    </nav>
+
     <div class="results" id="results"></div>
+
+    <div class="sec"><h2>Bến gần bạn</h2><button class="more" id="near-btn"><svg class="i"><use href="#i-locate"/></svg><span>Xem trạm gần tôi</span></button></div>
     <div class="panel" id="near">
-      <div class="near-head"><h2>Gần tôi</h2><button class="btn" id="near-btn">Xem trạm gần tôi</button></div>
-      <p class="hint" id="near-hint">Bấm để xem trạm gần nhất và các xe đi qua. App chỉ dùng vị trí trên máy bạn, không gửi đi đâu.</p>
+      <p class="hint" id="near-hint">Bấm "Xem trạm gần tôi" để thấy trạm gần nhất và các xe đi qua. App chỉ dùng vị trí trên máy bạn, không gửi đi đâu.</p>
       <div id="near-out"></div>
     </div>
     <div class="panel" id="voice-help" hidden>
-      <p style="margin:0"><b>Để giọng đọc tự nhiên hơn</b></p>
+      <p><b>Để giọng đọc tự nhiên hơn</b></p>
       <p class="hint">iPhone: Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Việt → tải giọng <b>Linh (Nâng cao)</b>.<br>Android: Cài đặt → Hệ thống → Ngôn ngữ → Đầu ra chuyển văn bản thành giọng nói → chọn <b>Google</b>, tải gói Tiếng Việt.</p>
     </div>
   </section>
 
   <!-- XE QUA TRẠM -->
-  <section id="view-stop" class="wrap" style="gap:18px" hidden>
-    <div class="panel">
-      <div class="field">
-        <label for="stopq">Tên trạm</label>
-        <input id="stopq" autocomplete="off" placeholder="Ví dụ: Bệnh viện Bạch Mai">
-        <div class="suggest" id="stopq-sug" hidden></div>
+  <section id="view-stop" class="wrap" hidden>
+    <div class="panel hero">
+      <div class="pt">
+        <span class="dot" style="background:var(--t-amber-bg);color:var(--t-amber)" aria-hidden="true"><svg class="i"><use href="#i-stop"/></svg></span>
+        <div class="field">
+          <label for="stopq">Tên trạm</label>
+          <input id="stopq" autocomplete="off" placeholder="Ví dụ: Bệnh viện Bạch Mai">
+          <div class="suggest" id="stopq-sug" hidden></div>
+        </div>
       </div>
       <p class="hint">Xem các tuyến dừng ở trạm này, đi về hướng nào, giờ chạy và giá vé.</p>
     </div>
@@ -257,11 +360,14 @@ footer p { margin: 0; }
   </section>
 
   <!-- TRA TUYẾN -->
-  <section id="view-route" class="wrap" style="gap:18px" hidden>
-    <div class="panel">
-      <div class="field">
-        <label for="routeq">Số tuyến</label>
-        <input id="routeq" autocomplete="off" inputmode="text" placeholder="Ví dụ: 32, 09B, E08">
+  <section id="view-route" class="wrap" hidden>
+    <div class="panel hero">
+      <div class="pt">
+        <span class="dot" style="background:var(--t-violet-bg);color:var(--t-violet)" aria-hidden="true"><svg class="i"><use href="#i-route"/></svg></span>
+        <div class="field">
+          <label for="routeq">Số tuyến</label>
+          <input id="routeq" autocomplete="off" inputmode="text" placeholder="Ví dụ: 32, 09B, E08">
+        </div>
       </div>
       <div class="saved" id="route-picks"></div>
     </div>
@@ -269,15 +375,15 @@ footer p { margin: 0; }
   </section>
 
   <footer>
-    <p>Dữ liệu 163 tuyến, 4.969 trạm lấy từ Timbus, nhập ngày 18/10/2026. Lộ trình có thể đã thay đổi.</p>
-    <p>Khoảng cách đi bộ tính theo đường thẳng, đường thực tế thường dài hơn. App không báo giờ xe đến; giờ chạy là giờ xuất bến đầu và cuối tại đầu tuyến.</p>
+    <p><svg class="i"><use href="#i-info"/></svg><span>Dữ liệu 163 tuyến, 4.969 trạm lấy từ Timbus, nhập ngày 18/10/2026. Lộ trình có thể đã thay đổi.</span></p>
+    <p><svg class="i"><use href="#i-walk"/></svg><span>Khoảng cách đi bộ tính theo đường thẳng, đường thực tế thường dài hơn. App không báo giờ xe đến; giờ chạy là giờ xuất bến đầu và cuối tại đầu tuyến.</span></p>
   </footer>
+</div>
 </div>
 <div class="trip" id="trip" hidden role="dialog" aria-label="Đang đi">
   <div class="trip-inner" id="trip-inner"></div>
 </div>
 <div class="toast" id="toast" hidden></div>
-
 <script id="transit-data" type="application/json">{{DATA}}</script>
 <script>{{ENGINE}}</script>
 <script>
@@ -286,6 +392,7 @@ footer p { margin: 0; }
   var data = JSON.parse(document.getElementById('transit-data').textContent);
   var E = window.TiktakEngine, eng = new E(data), clean = E.cleanName;
   var $ = function (id) { return document.getElementById(id); };
+  var ic = function (n) { return '<svg class="i"><use href="#i-' + n + '"/></svg>'; };
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   // ---- lưu trữ cục bộ (an toàn) ----
@@ -301,12 +408,17 @@ footer p { margin: 0; }
   $('textsize').onclick = function () { big = !big; save('big', big); applyBig(); };
 
   // ---- tabs ----
-  document.querySelectorAll('.tabs button').forEach(function (b) {
-    b.onclick = function () {
-      document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', String(x === b)); });
-      ['plan', 'stop', 'route'].forEach(function (v) { $('view-' + v).hidden = v !== b.dataset.tab; });
-    };
-  });
+  var TITLES = { stop: 'Xe nào qua trạm này?', route: 'Tra cứu tuyến xe' };
+  function greet() { var h = new Date().getHours(); return h < 11 ? 'Chào buổi sáng' : h < 14 ? 'Chào buổi trưa' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'; }
+  function setTab(v) {
+    ['plan', 'stop', 'route'].forEach(function (x) { $('view-' + x).hidden = x !== v; });
+    $('tab-plan').hidden = v === 'plan';
+    $('hello').innerHTML = v === 'plan' ? esc(greet()) + '<b>Hôm nay bạn đi đâu?</b>' : (v === 'stop' ? 'Xe qua trạm' : 'Tra tuyến') + '<b>' + TITLES[v] + '</b>';
+    window.scrollTo(0, 0);
+    if (v !== 'plan') { var q = $(v === 'stop' ? 'stopq' : 'routeq'); setTimeout(function () { try { q.focus({ preventScroll: true }); } catch (e) {} }, 50); }
+  }
+  document.querySelectorAll('[data-tab]').forEach(function (b) { b.onclick = function () { setTab(b.dataset.tab); }; });
+  setTab('plan');
 
   // ---- chọn điểm ----
   var sel = { from: null, to: null }; // {name, pos}
@@ -315,14 +427,14 @@ footer p { margin: 0; }
     function render() {
       var q = inp.value, trip = E.parseTrip(q);
       if (inputId === 'from' && trip && trip.from && trip.to) {
-        box.innerHTML = '<button type="button" data-trip="1">Tìm đường <b>' + esc(trip.from) + '</b> → <b>' + esc(trip.to) + '</b></button>';
+        box.innerHTML = '<button type="button" data-trip="1">' + ic('route') + ' Tìm đường <b>' + esc(trip.from) + '</b> → <b>' + esc(trip.to) + '</b></button>';
         box.hidden = false;
         box.firstChild.onclick = function () { box.hidden = true; setText('from', trip.from); setText('to', trip.to); plan(); };
         return;
       }
       var hits = eng.search(q, 6);
       if (!hits.length) { box.hidden = true; return; }
-      box.innerHTML = hits.map(function (h, i) { return '<button type="button" data-i="' + i + '">' + esc(h.name) + '</button>'; }).join('');
+      box.innerHTML = hits.map(function (h, i) { return '<button type="button" data-i="' + i + '">' + ic('pin') + '<span>' + esc(h.name) + '</span></button>'; }).join('');
       box.hidden = false;
       box.querySelectorAll('button').forEach(function (btn) {
         btn.onclick = function () { var h = hits[+btn.dataset.i]; inp.value = h.name; if (inp._syncClear) inp._syncClear(); box.hidden = true; onPick({ name: h.name, pos: h.pos, id: h.id }); };
@@ -348,7 +460,7 @@ footer p { margin: 0; }
   showSug('from', function (p) { sel.from = p; });
   // ---- GPS ----
   $('gps').onclick = function () {
-    var btn = $('gps');
+    var btn = $('gps').querySelector('span');
     if (!('geolocation' in navigator)) { toast('Máy này không hỗ trợ định vị. Hãy gõ tên trạm gần bạn.'); return; }
     btn.textContent = 'Đang tìm vị trí…';
     navigator.geolocation.getCurrentPosition(function (p) {
@@ -368,8 +480,8 @@ footer p { margin: 0; }
   // ---- địa điểm đã lưu ----
   var saved = load('saved', []);
   function renderSaved() {
-    var html = saved.map(function (s, i) { return '<button class="chip" data-i="' + i + '" title="' + esc(s.name) + '">' + esc(s.label) + '</button>'; }).join('');
-    html += '<button class="chip ghost" id="save-to">+ Lưu điểm đến</button>';
+    var html = saved.map(function (s, i) { return '<button class="chip" data-i="' + i + '" title="' + esc(s.name) + '">' + ic(/nhà/i.test(s.label) ? 'home' : 'star') + esc(s.label) + '</button>'; }).join('');
+    html += '<button class="chip ghost" id="save-to">' + ic('plus') + 'Lưu điểm đến</button>';
     $('saved').innerHTML = html;
     $('saved').querySelectorAll('.chip[data-i]').forEach(function (c) {
       c.onclick = function () {
@@ -380,7 +492,10 @@ footer p { margin: 0; }
       };
     });
     $('save-to').onclick = startSave;
+    var home = homePlace();
+    $('tile-home-t').textContent = home ? 'Về ' + home.label : 'Về nhà';
   }
+  function homePlace() { return saved.filter(function (s) { return /nhà/i.test(s.label); })[0] || saved[0] || null; }
   function startSave() {
     var p = resolve('to');
     if (!p || p.missing) { toast('Hãy chọn điểm đến trước, rồi bấm Lưu'); $('to').focus(); return; }
@@ -449,11 +564,11 @@ footer p { margin: 0; }
       var top = o.legs.map(function (l) { return codesHtml(l); }).join(' <span class="arrow">→</span> ');
       var sum = (o.transfers ? 'Đổi xe 1 lần' : 'Không đổi xe') + ' · ' + o.stopsTotal + ' trạm · đi bộ ~' + m(o.walkTotal);
       var steps = [];
-      steps.push('<li class="step"><span class="dot walk">1</span><div><p class="main">' + (o.walkStart < 40 ? 'Ra trạm <span class="place">' + esc(clean(o.legs[0].fromName)) + '</span>, ngay gần đây' : 'Đi bộ khoảng ' + m(o.walkStart) + ' tới trạm <span class="place">' + esc(clean(o.legs[0].fromName)) + '</span>') + '</p>' +
-        '<p class="sub"><a class="link" href="' + mapLink(o.legs[0].fromPos) + '" target="_blank" rel="noopener">Xem trạm trên bản đồ</a></p></div></li>');
+      steps.push('<li class="step"><span class="dot walk">' + ic('walk') + '</span><div><p class="main">' + (o.walkStart < 40 ? 'Ra trạm <span class="place">' + esc(clean(o.legs[0].fromName)) + '</span>, ngay gần đây' : 'Đi bộ khoảng ' + m(o.walkStart) + ' tới trạm <span class="place">' + esc(clean(o.legs[0].fromName)) + '</span>') + '</p>' +
+        '<p class="sub"><a class="link" href="' + mapLink(o.legs[0].fromPos) + '" target="_blank" rel="noopener">' + ic('map') + 'Xem trạm trên bản đồ</a></p></div></li>');
       o.legs.forEach(function (l, li) {
-        if (li > 0) steps.push('<li class="step"><span class="dot walk">↔</span><div><p class="main">Xuống xe, ' + (o.walkXfer >= 40 ? 'đi bộ khoảng ' + m(o.walkXfer) + ' ' : '') + 'sang trạm <span class="place">' + esc(clean(l.fromName)) + '</span> để đổi xe</p></div></li>');
-        steps.push('<li class="step"><span class="dot bus">XE</span><div>' +
+        if (li > 0) steps.push('<li class="step"><span class="dot xfer">' + ic('swap') + '</span><div><p class="main">Xuống xe, ' + (o.walkXfer >= 40 ? 'đi bộ khoảng ' + m(o.walkXfer) + ' ' : '') + 'sang trạm <span class="place">' + esc(clean(l.fromName)) + '</span> để đổi xe</p></div></li>');
+        steps.push('<li class="step"><span class="dot bus">' + ic('bus') + '</span><div>' +
           '<p class="main">Lên xe ' + codesHtml(l, true) + ' đi hướng <span class="place">' + esc(l.toward) + '</span></p>' +
           '<p class="sub">Đi ' + l.stops + ' trạm, xuống ở <span class="place">' + esc(clean(l.toName)) + '</span></p>' +
           '<p class="sub">' + esc(l.freq) + (l.price ? ' · ' + esc(price(l.price)) : '') + '</p>' +
@@ -462,11 +577,11 @@ footer p { margin: 0; }
           '<ol class="stoplist" id="sl-' + oi + '-' + li + '" hidden>' + l.stopIds.map(function (id) { return '<li>' + esc(clean(data.stops[id][0])) + '</li>'; }).join('') + '</ol>' +
           '</div></li>');
       });
-      steps.push('<li class="step"><span class="dot walk">✓</span><div><p class="main">' + (o.walkEnd < 40 ? 'Xuống xe là tới nơi' : 'Đi bộ khoảng ' + m(o.walkEnd) + ' tới nơi') + '</p></div></li>');
+      steps.push('<li class="step"><span class="dot end">' + ic('flag') + '</span><div><p class="main">' + (o.walkEnd < 40 ? 'Xuống xe là tới nơi' : 'Đi bộ khoảng ' + m(o.walkEnd) + ' tới nơi') + '</p></div></li>');
       return '<article class="opt' + (oi === 0 ? ' best' : '') + '">' +
         '<div class="opt-top">' + top + '<span class="sum">' + sum + '</span>' + (oi === 0 ? '<span class="tag">Gợi ý</span>' : '') + '</div>' +
         '<ol class="steps">' + steps.join('') + '</ol>' +
-        '<div class="actions"><button class="btn primary" data-start="' + oi + '">Bắt đầu đi</button><button class="btn" data-speak="' + oi + '">Đọc to</button><button class="btn" data-share="' + oi + '">Gửi cho người thân</button></div>' +
+        '<div class="actions"><button class="btn primary" data-start="' + oi + '">' + ic('nav') + 'Bắt đầu đi</button><button class="btn" data-speak="' + oi + '">' + ic('sound') + 'Đọc to</button><button class="btn" data-share="' + oi + '">' + ic('share') + 'Gửi người thân</button></div>' +
         '<div id="copy-' + oi + '"></div></article>';
     }).join('');
 
@@ -595,8 +710,8 @@ footer p { margin: 0; }
       if (sv.state === 'notyet') return 'chạy từ ' + sv.first;
       return '<span style="color:var(--stop-fg)">hết chuyến</span>';
     }
-    var actions = '<div class="big-actions"><button class="btn primary" id="near-go">Đi đâu? Tìm đường từ đây</button>' +
-      (saved.length ? '<button class="btn" id="near-home">Về ' + esc(saved[0].label) + '</button>' : '<button class="btn" id="near-save">Lưu chỗ hay đi (Nhà…)</button>') + '</div>';
+    var actions = '<div class="big-actions"><button class="btn primary" id="near-go">' + ic('search') + 'Tìm đường từ đây</button>' +
+      (saved.length ? '<button class="btn" id="near-home">' + ic('home') + 'Về ' + esc(homePlace().label) + '</button>' : '<button class="btn" id="near-save">' + ic('plus') + 'Lưu chỗ hay đi</button>') + '</div>';
     if (!stops.length) {
       out.innerHTML = '<p class="err">Không có trạm xe buýt nào trong khoảng 700 m quanh bạn.</p>' + actions;
     } else {
@@ -605,11 +720,11 @@ footer p { margin: 0; }
         var running = st.routes.filter(function (r) { var t = eng.service(r.routeId, r.dir, now).state; return t === 'running' || t === 'ending'; }).length;
         var codes = st.routes.map(function (r) { return r.code; }).filter(function (c, k, arr) { return arr.indexOf(c) === k; });
         return '<div class="stop-row">' +
-          '<button class="stop-toggle" aria-expanded="false" data-si="' + si + '">' +
+          '<button class="stop-toggle" aria-expanded="false" data-si="' + si + '"><span class="pin" aria-hidden="true">' + ic('stop') + '</span>' +
             '<span class="st-main"><span class="st-name">' + esc(st.name) + '</span>' +
             '<span class="d">' + m(st.d) + ' · ' + codes.length + ' tuyến' + (running ? ', ' + running + ' lượt đang chạy' : '') + '</span>' +
             '<span class="st-codes">' + codes.slice(0, 6).map(function (c) { return '<span class="sign xs">' + esc(c) + '</span>'; }).join('') + (codes.length > 6 ? '<span class="d">+' + (codes.length - 6) + '</span>' : '') + '</span></span>' +
-            '<span class="chev" aria-hidden="true">▸</span></button>' +
+            '<span class="chev" aria-hidden="true">' + ic('chev') + '</span></button>' +
           '<div class="stop-routes" hidden>' +
             (side ? '<p class="d">' + side + '</p>' : '') +
             st.routes.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (r) {
@@ -617,26 +732,26 @@ footer p { margin: 0; }
               return '<div class="route-line"><span class="sign sm">' + esc(r.code) + '</span>' +
                 '<p><b>→ ' + esc(r.toward) + '</b> <span class="d">· ' + shortStatus(sv) + '</span></p></div>';
             }).join('') +
-            '<p class="d"><a class="link" href="' + mapLink(data.stops[st.id].slice(1)) + '" target="_blank" rel="noopener">Xem bến trên bản đồ</a></p>' +
+            '<p class="d"><a class="link" href="' + mapLink(data.stops[st.id].slice(1)) + '" target="_blank" rel="noopener">' + ic('map') + 'Xem bến trên bản đồ</a></p>' +
           '</div></div>';
       }).join('') + '</div>' + actions;
     }
     out.querySelectorAll('.stop-toggle').forEach(function (btn) {
       btn.onclick = function () {
         var open = btn.getAttribute('aria-expanded') === 'true';
-        out.querySelectorAll('.stop-toggle').forEach(function (o) { o.setAttribute('aria-expanded', 'false'); o.nextElementSibling.hidden = true; o.querySelector('.chev').textContent = '▸'; });
-        if (!open) { btn.setAttribute('aria-expanded', 'true'); btn.nextElementSibling.hidden = false; btn.querySelector('.chev').textContent = '▾'; }
+        out.querySelectorAll('.stop-toggle').forEach(function (o) { o.setAttribute('aria-expanded', 'false'); o.nextElementSibling.hidden = true; });
+        if (!open) { btn.setAttribute('aria-expanded', 'true'); btn.nextElementSibling.hidden = false; }
       };
     });
     $('near-hint').hidden = true;
-    $('near-btn').textContent = 'Cập nhật vị trí';
+    $('near-btn').querySelector('span').textContent = 'Cập nhật';
     $('near-go').onclick = function () {
       $('from').value = 'Vị trí của tôi'; if ($('from')._syncClear) $('from')._syncClear(); sel.from = { name: 'Vị trí của tôi', pos: pos };
       $('to').value = ''; sel.to = null; if ($('to')._syncClear) $('to')._syncClear();
       $('to').focus(); $('to').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
     if ($('near-home')) $('near-home').onclick = function () {
-      var h = saved[0];
+      var h = homePlace();
       $('from').value = 'Vị trí của tôi'; sel.from = { name: 'Vị trí của tôi', pos: pos };
       $('to').value = h.name; sel.to = { name: h.name, pos: h.pos };
       ['from', 'to'].forEach(function (k) { if ($(k)._syncClear) $(k)._syncClear(); });
@@ -645,7 +760,7 @@ footer p { margin: 0; }
     if ($('near-save')) $('near-save').onclick = function () { $('to').focus(); toast('Gõ địa điểm vào ô Đến, rồi bấm "+ Lưu điểm đến"'); };
   }
   function loadNear() {
-    var btn = $('near-btn'); btn.textContent = 'Đang tìm vị trí…';
+    var btn = $('near-btn').querySelector('span'); btn.textContent = 'Đang tìm…';
     getPos(function (pos) { renderNear(pos); }, function () {
       btn.textContent = 'Xem trạm gần tôi';
       $('near-hint').hidden = false;
@@ -653,6 +768,18 @@ footer p { margin: 0; }
     });
   }
   $('near-btn').onclick = loadNear;
+  $('tile-near').onclick = function () { $('near').scrollIntoView({ behavior: 'smooth', block: 'start' }); loadNear(); };
+  $('tile-home').onclick = function () {
+    var h = homePlace();
+    if (!h) { $('to').focus(); toast('Gõ địa chỉ nhà vào ô Đến, rồi bấm "Lưu điểm đến" và đặt tên là Nhà'); return; }
+    setText('to', h.name); sel.to = { name: h.name, pos: h.pos };
+    getPos(function (pos) {
+      setText('from', 'Vị trí của tôi'); sel.from = { name: 'Vị trí của tôi', pos: pos }; plan();
+    }, function () {
+      if (!$('from').value.trim() || $('from').value === 'Vị trí của tôi') { setText('from', ''); $('from').focus(); toast('Chưa lấy được vị trí. Hãy gõ nơi bạn đang đứng vào ô Đi từ.'); }
+      else plan();
+    });
+  };
   try {
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'geolocation' }).then(function (r) { if (r.state === 'granted') loadNear(); }, function () {});
@@ -740,42 +867,42 @@ footer p { margin: 0; }
       trip.gps === 'off' ? 'Không lấy được vị trí. Bấm "Bước tiếp" khi xong mỗi bước.' : 'Đang tìm vị trí…';
     if (s.type === 'walk') {
       var d = me ? dist(me, s.target) : null;
-      body = '<p class="trip-step">Bước ' + (trip.i + 1) + '/' + n + (s.xfer ? ' · Đổi xe' : '') + '</p>' +
+      body = '<p class="trip-step">' + ic('walk') + 'Bước ' + (trip.i + 1) + '/' + n + (s.xfer ? ' · Đổi xe' : '') + '</p>' +
         '<p class="trip-title">' + (s.final ? 'Đi bộ tới ' + esc(s.place) : (s.xfer ? 'Sang trạm ' : 'Đi bộ tới trạm ') + esc(s.place)) + '</p>' +
         (d !== null ? '<p class="trip-big">còn ' + m(d) + '</p>' : '') +
-        (sideHint(s.raw) ? '<p class="trip-alert">' + sideHint(s.raw) + '</p>' : '') +
-        '<p class="trip-note"><a class="link" href="' + mapLink(s.target) + '" target="_blank" rel="noopener">Chỉ đường đi bộ trên bản đồ</a></p>';
+        (sideHint(s.raw) ? '<p class="trip-alert">' + ic('info') + sideHint(s.raw) + '</p>' : '') +
+        '<p class="trip-note"><a class="link" href="' + mapLink(s.target) + '" target="_blank" rel="noopener">' + ic('map') + 'Chỉ đường đi bộ trên bản đồ</a></p>';
     } else if (s.type === 'wait') {
       var sv = s.leg.service;
-      body = '<p class="trip-step">Bước ' + (trip.i + 1) + '/' + n + '</p>' +
+      body = '<p class="trip-step">' + ic('stop') + 'Bước ' + (trip.i + 1) + '/' + n + '</p>' +
         '<p class="trip-title">Chờ xe ' + codesHtml(s.leg) + '</p>' +
         '<p class="trip-note">Đi hướng <b>' + esc(s.leg.toward) + '</b>. Hỏi phụ xe nếu chưa chắc.</p>' +
         '<p class="trip-note">' + esc(s.leg.freq) + '</p><div class="badges">' + serviceBadge(sv) + '</div>';
     } else if (s.type === 'ride') {
       var ids = s.leg.stopIds, left = ids.length - 1 - s.progress;
       var show = ids.slice(s.progress, Math.min(ids.length, s.progress + 6));
-      body = '<p class="trip-step">Bước ' + (trip.i + 1) + '/' + n + ' · Trên xe ' + esc(s.leg.code) + '</p>' +
+      body = '<p class="trip-step">' + ic('bus') + 'Bước ' + (trip.i + 1) + '/' + n + ' · Trên xe ' + esc(s.leg.code) + '</p>' +
         '<p class="trip-big">còn ' + left + ' trạm</p>' +
         '<p class="trip-title">Xuống ở ' + esc(clean(s.leg.toName)) + '</p>' +
-        (left === 1 ? '<p class="trip-alert">Trạm sau xuống xe! Chuẩn bị bấm chuông.</p>' : '') +
+        (left === 1 ? '<p class="trip-alert">' + ic('alert') + 'Trạm sau xuống xe! Chuẩn bị bấm chuông.</p>' : '') +
         '<ol class="ride-list">' + show.map(function (id, k) {
           var cls = (s.progress + k === ids.length - 1) ? 'dest' : (k === 0 ? 'cur' : '');
           return '<li class="' + cls + '">' + (k === 0 ? 'Đang ở gần: ' : '') + esc(clean(data.stops[id][0])) + '</li>';
         }).join('') + (s.progress + 6 < ids.length ? '<li>…</li><li class="dest">' + esc(clean(s.leg.toName)) + '</li>' : '') + '</ol>';
     } else {
-      body = '<p class="trip-title">Đã tới nơi</p><p class="trip-note">' + esc(trip.to.name) + '</p>';
+      body = '<p class="trip-step">' + ic('check') + 'Hoàn thành</p><p class="trip-title">Đã tới nơi</p><p class="trip-note">' + esc(trip.to.name) + '</p>';
     }
     var done = s.type === 'done';
     $('trip-inner').innerHTML =
-      '<div class="trip-top"><b>Đang đi</b><button class="btn" id="trip-end">' + (done ? 'Đóng' : 'Kết thúc') + '</button></div>' +
+      '<div class="trip-top"><b><span class="brand-mark">' + ic('nav') + '</span>Đang đi</b><button class="btn" id="trip-end">' + ic('close') + (done ? 'Đóng' : 'Kết thúc') + '</button></div>' +
       '<div class="trip-progress">' + bar + '</div>' +
       '<div class="trip-card' + (done ? ' trip-done' : '') + '">' + body + '</div>' +
       (done ? '' : '<div class="trip-btns">' +
-        (s.type === 'wait' ? '<button class="btn primary wide" id="trip-next">Tôi đã lên xe</button>' :
-         s.type === 'ride' ? '<button class="btn primary wide" id="trip-next">Tôi đã xuống xe</button>' :
-         '<button class="btn primary wide" id="trip-next">Bước tiếp</button>') +
-        '<button class="btn" id="trip-back">Quay lại</button><button class="btn" id="trip-say">Đọc to</button></div>') +
-      '<p class="gps-state">' + gps + '</p>';
+        (s.type === 'wait' ? '<button class="btn primary wide" id="trip-next">' + ic('bus') + 'Tôi đã lên xe</button>' :
+         s.type === 'ride' ? '<button class="btn primary wide" id="trip-next">' + ic('check') + 'Tôi đã xuống xe</button>' :
+         '<button class="btn primary wide" id="trip-next">' + ic('arrow') + 'Bước tiếp</button>') +
+        '<button class="btn" id="trip-back">' + ic('back') + 'Quay lại</button><button class="btn" id="trip-say">' + ic('sound') + 'Đọc to</button></div>') +
+      '<p class="gps-state">' + ic('locate') + gps + '</p>';
     $('trip-end').onclick = endTrip;
     if ($('trip-next')) $('trip-next').onclick = function () { go(1); };
     if ($('trip-back')) $('trip-back').onclick = function () { go(-1); };
@@ -797,7 +924,7 @@ footer p { margin: 0; }
     if (amb) {
       var k = amb[0], hits = amb[1].choose;
       $('results').innerHTML = '<div class="panel"><p class="main" style="margin:0"><b>Có nhiều nơi tên "' + esc(amb[1].q) + '".</b> Bạn muốn ' + (k === 'from' ? 'đi từ' : 'đến') + ' trạm nào?</p>' +
-        '<div class="list">' + hits.map(function (h, i) { return '<button class="btn" style="text-align:left;margin-top:8px" data-pick="' + i + '">' + esc(h.name) + '</button>'; }).join('') + '</div>' +
+        '<div class="list">' + hits.map(function (h, i) { return '<button class="btn" style="justify-content:flex-start;text-align:left;margin-top:8px;width:100%" data-pick="' + i + '">' + ic('pin') + '<span>' + esc(h.name) + '</span></button>'; }).join('') + '</div>' +
         '<p class="hint">Không thấy đúng chỗ? Gõ thêm tên đường hoặc quận, ví dụ "Hồ Gươm Đinh Tiên Hoàng".</p></div>';
       $('results').querySelectorAll('[data-pick]').forEach(function (btn) {
         btn.onclick = function () { var h = hits[+btn.dataset.pick]; $(k).value = h.name; if ($(k)._syncClear) $(k)._syncClear(); sel[k] = { name: h.name, pos: h.pos, id: h.id }; plan(); };
@@ -814,7 +941,7 @@ footer p { margin: 0; }
   function renderStop(h) {
     var list = eng.routesAt(h.id, 60), now = new Date(), out = $('stop-out');
     out.hidden = false;
-    out.innerHTML = '<div class="results-head"><h2>' + esc(h.name) + '</h2><a class="link" href="' + mapLink(h.pos) + '" target="_blank" rel="noopener">Bản đồ</a></div>' +
+    out.innerHTML = '<div class="results-head"><h2>' + esc(h.name) + '</h2><a class="link" href="' + mapLink(h.pos) + '" target="_blank" rel="noopener">' + ic('map') + 'Bản đồ</a></div>' +
       '<p class="hint">' + list.length + ' lượt tuyến dừng ở trạm này hoặc trạm sát bên.</p><div class="list">' +
       list.map(function (r) {
         return '<div class="row"><span class="sign sm">' + esc(r.code) + '</span><div><p><b>Hướng ' + esc(r.toward) + '</b></p>' +
@@ -827,11 +954,11 @@ footer p { margin: 0; }
   function renderRoute(id) {
     var r = data.routes[id], dirs = eng.routeStops(id), now = new Date(), out = $('route-out');
     out.hidden = false;
-    out.innerHTML = '<div class="opt-top" style="border-radius:12px"><span class="sign">' + esc(r.c) + '</span><span><b>' + esc(r.n) + '</b></span></div>' +
+    out.innerHTML = '<div class="route-head"><span class="sign">' + esc(r.c) + '</span><span><b>' + esc(r.n) + '</b></span></div>' +
       '<p class="sub" style="margin:0">' + esc(r.q) + (r.p ? ' · ' + esc(price(r.p)) : '') + '</p>' +
       '<div class="dirs">' + dirs.map(function (d) {
         var toward = d.dir === 'GO' ? r.l : r.f;
-        return '<div><h3>Hướng ' + esc(toward) + '</h3><div class="badges" style="margin-bottom:8px">' + serviceBadge(eng.service(id, d.dir, now)) + '</div><ol>' +
+        return '<div><h3>' + ic('flag') + 'Hướng ' + esc(toward) + '</h3><div class="badges" style="margin-bottom:8px">' + serviceBadge(eng.service(id, d.dir, now)) + '</div><ol>' +
           d.stops.map(function (s) { return '<li>' + esc(s.name) + '</li>'; }).join('') + '</ol></div>';
       }).join('') + '</div>';
   }
