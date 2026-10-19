@@ -160,7 +160,7 @@ nav button[aria-current="page"]{color:var(--accent)}
     </div>
     <div class="card" id="finishCard" hidden>
       <h2>Ghi lại buổi đi</h2>
-      <label for="fSteps">Số bước buổi này (xem trong app Sức khỏe; đã điền sẵn ước tính)
+      <label for="fSteps">Số bước buổi này (đã điền số app đếm; không đếm được thì nhập theo app Sức khỏe)
         <input id="fSteps" type="number" inputmode="numeric" min="0" step="10">
       </label>
       <div><div class="eyebrow" style="margin-bottom:6px">Buổi này thế nào?</div>
@@ -331,15 +331,15 @@ function renderRun() {
   $("wTarget").textContent = p.minutes + " phút · " + fmt(p.steps) + " bước";
   $("timer").textContent = mmss(elapsed());
   const steps = sessionSteps(), cad = sensor === "on" ? sc.cadence(performance.now() / 1000) : 0;
-  $("liveSteps").textContent = fmt(steps);
+  $("liveSteps").textContent = steps === null ? "–" : fmt(steps);
   $("liveCad").textContent = cad || "–";
-  $("liveKm").textContent = (steps * stride() / 100000).toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  $("liveKm").textContent = steps === null ? "–" : (steps * stride() / 100000).toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   $("sensorTxt").textContent = {
     off: "bước · bấm Bắt đầu để bật cảm biến",
     listening: "bước · đang bật cảm biến…",
     on: run.on ? (sc.walking ? "bước · đang đếm" : "bước · đứng yên, chưa đếm") : "bước · đang tạm dừng",
-    denied: "bước ước tính · chưa cho phép cảm biến chuyển động",
-    none: "bước ước tính · máy này không có cảm biến chuyển động",
+    denied: "Không đếm được bước: chưa cho phép cảm biến chuyển động. Mở bằng Safari tại bus.nomahubvn.com/dibo và bấm Cho phép.",
+    none: "Không đếm được bước: trình duyệt này không gửi dữ liệu cảm biến. Mở bằng Safari tại bus.nomahubvn.com/dibo.",
   }[sensor];
   $("phase").textContent = currentCadence().label;
   $("runBtn").textContent = run.on ? "Tạm dừng" : (run.acc ? "Đi tiếp" : "Bắt đầu");
@@ -372,7 +372,8 @@ async function keepAwake() {
   try { if (navigator.wakeLock && run.on) wake = await navigator.wakeLock.request("screen"); } catch (e) {}
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
-function sessionSteps() { return sensor === "on" ? sc.count : Math.round(elapsed() / 60000 * S._plan.cadence); }
+// Chỉ trả số bước khi cảm biến thật sự chạy; không bao giờ ước tính.
+function sessionSteps() { return sensor === "on" ? sc.count : null; }
 
 $("runBtn").addEventListener("click", async () => {
   if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); }
@@ -391,10 +392,10 @@ $("runBtn").addEventListener("click", async () => {
 function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); renderRun(); }
 $("endBtn").addEventListener("click", () => {
   stopRun();
-  $("fSteps").value = sessionSteps();
+  $("fSteps").value = sessionSteps() ?? "";
   $("finishCard").hidden = false;
 });
-$("sosBtn").addEventListener("click", () => { stopRun(); $("sosCard").hidden = false; $("finishCard").hidden = !run.acc; if (run.acc) $("fSteps").value = sessionSteps(); });
+$("sosBtn").addEventListener("click", () => { stopRun(); $("sosCard").hidden = false; $("finishCard").hidden = !run.acc; if (run.acc) $("fSteps").value = sessionSteps() ?? ""; });
 function setMetro(on) { run.metro = on; $("metroOn").setAttribute("aria-pressed", on); $("metroOff").setAttribute("aria-pressed", !on); }
 $("metroOn").addEventListener("click", () => { setMetro(true); if (!run.audio) { try { run.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } });
 $("metroOff").addEventListener("click", () => setMetro(false));
