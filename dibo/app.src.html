@@ -2,6 +2,8 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <style>
 /* Layout: ứng dụng một cột kiểu điện thoại, thanh tab dưới đáy; mỗi tab là một màn hình. */
 :root{
@@ -46,6 +48,11 @@ h2{font-size:17px;font-weight:600}
 .stat b{font-family:var(--f-display);font-size:19px;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.map{height:280px;border-radius:12px;overflow:hidden;border:1px solid var(--line);z-index:0}
+.map-wrap{position:relative}
+.map-btn{position:absolute;right:10px;bottom:10px;z-index:500;min-height:38px;padding:6px 12px;font-size:13.5px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
 #sumRoute{background:var(--bg);border-radius:10px}
 .route-line{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 .notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
@@ -146,6 +153,8 @@ nav button[aria-current="page"]{color:var(--accent)}
         <div class="stat"><b id="liveKm">0</b><span id="kmLbl">km</span></div>
       </div>
       <div class="chips"><span class="chip" id="gpsChip">GPS chưa bật</span><span class="chip sun" id="speedChip" hidden></span><span class="chip warn" id="adviceChip" hidden></span></div>
+      <div class="map-wrap" id="liveMapWrap" hidden><div class="map" id="liveMap"></div><button class="map-btn" id="followBtn" hidden>Về vị trí của tôi</button></div>
+      <div class="legend" id="liveLegend" hidden><span><i style="background:var(--accent)"></i>Buổi này</span><span><i style="background:var(--sun);opacity:.6"></i>Các buổi trước</span></div>
       <div class="phase" id="phase">Giữ nhịp đều</div>
       <div class="pulse" id="pulse" aria-hidden="true"></div>
       <div class="seg" role="group" aria-label="Tiếng gõ nhịp">
@@ -170,6 +179,7 @@ nav button[aria-current="page"]{color:var(--accent)}
       <h2>Tổng kết buổi đi</h2>
       <div class="stats" id="sumStats"></div>
       <div class="muted" id="sumNote" style="font-size:14px"></div>
+      <div class="map" id="sumMap" hidden></div>
       <svg class="chart" id="sumRoute" viewBox="0 0 340 200" role="img" aria-label="Lộ trình buổi đi" hidden></svg>
       <label for="fSteps">Số bước buổi này (đã điền số app đếm; không đếm được thì nhập theo app Sức khỏe)
         <input id="fSteps" type="number" inputmode="numeric" min="0" step="10">
@@ -202,6 +212,7 @@ nav button[aria-current="page"]{color:var(--accent)}
       <button class="primary" id="adjBtn">Chốt tuần và áp dụng</button>
       <div id="adjResult" hidden></div>
     </div>
+    <div class="card" id="histMapCard" hidden><div class="top"><h2 id="histMapTitle">Lộ trình</h2><button id="histMapClose" style="min-height:38px;padding:6px 12px">Đóng</button></div><div class="map" id="histMap"></div><div class="muted" id="histMapInfo" style="font-size:14px"></div></div>
     <div class="card"><h2>Lịch sử buổi đi</h2><div class="hist" id="hist"></div></div>
   </section>
 
@@ -401,7 +412,9 @@ function startGps() {
   try {
     gpsWatch = navigator.geolocation.watchPosition((pos) => {
       gps = "on";
-      if (run.on) track.add({ lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy, t: Date.now() / 1000 });
+      const la = pos.coords.latitude, lo = pos.coords.longitude;
+      const added = run.on ? track.add({ lat: la, lon: lo, acc: pos.coords.accuracy, t: Date.now() / 1000 }) : false;
+      onGpsPoint(la, lo, added);
     }, (err) => { gps = err.code === 1 ? "denied" : (gps === "on" ? "on" : "wait"); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
   } catch (e) { gps = "none"; }
 }
@@ -415,6 +428,64 @@ function liveDistance(steps) {
 function liveSpeed(cad) {
   if (gps === "on") { const v = track.speed(Date.now() / 1000); if (v > 0) return v; }
   return cad ? cad * stride() * 60 / 100000 : 0;
+}
+
+// ---- Bản đồ (Leaflet + OpenStreetMap) ----
+const hasMap = () => typeof L !== "undefined" && L.map;
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let segs = [[]];            // các đoạn đã đi của buổi này, ngắt khi tạm dừng
+let liveMap = null, liveLine = null, liveDot = null, follow = true, lastPos = null;
+function makeMap(el) {
+  const m = L.map(el, { zoomControl: false, minZoom: 13, maxZoom: 19 });
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(m);
+  return m;
+}
+function routeSegments(r) { if (!r || !r.length) return []; return Array.isArray(r[0]) ? r : [r]; }
+function pastLines(map, excludeIdx) {
+  const color = cssVar("--sun");
+  S.sessions.slice(-30).forEach((ss, i, arr) => {
+    if (i === excludeIdx) return;
+    routeSegments(ss.route).forEach((seg) => { if (seg.length > 1) L.polyline(seg.map((p) => [p.lat, p.lon]), { color, weight: 4, opacity: 0.45, interactive: false }).addTo(map); });
+  });
+}
+function ensureLiveMap(lat, lon) {
+  if (!hasMap()) return;
+  if (!liveMap) {
+    $("liveMapWrap").hidden = false; $("liveLegend").hidden = false;
+    liveMap = makeMap($("liveMap"));
+    liveMap.setView([lat, lon], 17);
+    pastLines(liveMap, -1);
+    liveLine = L.polyline([], { color: cssVar("--accent"), weight: 6, opacity: 0.95 }).addTo(liveMap);
+    liveDot = L.circleMarker([lat, lon], { radius: 8, color: "#fff", weight: 3, fillColor: "#1F6FEB", fillOpacity: 1 }).addTo(liveMap);
+    liveMap.on("dragstart", () => { follow = false; $("followBtn").hidden = false; });
+  }
+}
+$("followBtn").addEventListener("click", () => { follow = true; $("followBtn").hidden = true; if (liveMap && lastPos) liveMap.setView(lastPos, Math.max(liveMap.getZoom(), 16)); });
+function onGpsPoint(lat, lon, added) {
+  lastPos = [lat, lon];
+  if (added) segs[segs.length - 1].push({ lat, lon });
+  if (!hasMap()) return;
+  ensureLiveMap(lat, lon);
+  liveDot.setLatLng(lastPos);
+  if (added) liveLine.setLatLngs(segs.filter((g) => g.length).map((g) => g.map((p) => [p.lat, p.lon])));
+  if (follow) liveMap.panTo(lastPos, { animate: true });
+}
+function cutSegment() { if (segs[segs.length - 1].length) segs.push([]); }
+let sumMap = null, histMap = null;
+function showRouteMap(which, el, segments) {
+  if (!hasMap()) return false;
+  const pts = segments.flat();
+  if (pts.length < 2) { el.hidden = true; return false; }
+  el.hidden = false;
+  let m = which === "sum" ? sumMap : histMap;
+  if (!m) { m = makeMap(el); if (which === "sum") sumMap = m; else histMap = m; }
+  m.eachLayer((l) => { if (!(l instanceof L.TileLayer)) m.removeLayer(l); });
+  const line = L.polyline(segments.filter((g) => g.length > 1).map((g) => g.map((p) => [p.lat, p.lon])), { color: cssVar("--accent"), weight: 6 }).addTo(m);
+  L.circleMarker([pts[0].lat, pts[0].lon], { radius: 7, color: cssVar("--accent"), weight: 3, fillColor: "#fff", fillOpacity: 1 }).addTo(m).bindTooltip("Bắt đầu");
+  const e = pts[pts.length - 1];
+  L.circleMarker([e.lat, e.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--sun"), fillOpacity: 1 }).addTo(m).bindTooltip("Kết thúc");
+  setTimeout(() => { m.invalidateSize(); m.fitBounds(line.getBounds(), { padding: [24, 24], maxZoom: 18 }); }, 50);
+  return true;
 }
 
 // ---- Giọng nói ----
@@ -458,7 +529,7 @@ function coachTick() {
 function sessionSteps() { return sensor === "on" ? sc.count : null; }
 
 $("runBtn").addEventListener("click", async () => {
-  if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); }
+  if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); }
   else {
     const p = startSensor();
     startGps();
@@ -473,7 +544,7 @@ $("runBtn").addEventListener("click", async () => {
   }
   renderRun();
 });
-function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); renderRun(); }
+function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); renderRun(); }
 $("endBtn").addEventListener("click", () => {
   stopRun();
   $("fSteps").value = sessionSteps() ?? "";
@@ -498,7 +569,8 @@ function renderSummary() {
   if (m.avgCad) notes.push(cadenceAdvice(S._plan.cadence, m.avgCad) === "nhanh" ? "Nhịp trung bình thấp hơn mục tiêu " + S._plan.cadence + "." : cadenceAdvice(S._plan.cadence, m.avgCad) === "cham" ? "Nhịp trung bình cao hơn mục tiêu " + S._plan.cadence + "." : "Nhịp trung bình đúng mục tiêu.");
   if (m.kmSource !== "gps") notes.push("Không có GPS nên quãng đường tính từ số bước.");
   $("sumNote").textContent = notes.join(" ");
-  drawRoute($("sumRoute"), track.points);
+  const segments = segs.filter((g) => g.length);
+  if (showRouteMap("sum", $("sumMap"), segments)) $("sumRoute").setAttribute("hidden", ""); else drawRoute($("sumRoute"), segments.flat());
 }
 function drawRoute(svg, pts) {
   // SVG không có thuộc tính .hidden như HTML: phải đặt/bỏ attribute
@@ -524,14 +596,15 @@ document.querySelectorAll("[data-feel]").forEach((b) => b.addEventListener("clic
 }));
 $("saveBtn").addEventListener("click", () => {
   const m = currentSummary();
-  const pts = track.points, stepN = Math.max(1, Math.ceil(pts.length / 150));
-  const route = pts.filter((_, i) => i % stepN === 0 || i === pts.length - 1).map((p) => ({ lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5) }));
+  const all = segs.reduce((a, g) => a + g.length, 0), stepN = Math.max(1, Math.ceil(all / 300));
+  const route = segs.filter((g) => g.length > 1).map((g) => g.filter((_, i) => i % stepN === 0 || i === g.length - 1).map((p) => ({ lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5) })));
   S.sessions.push({ date: dkey(today()), steps: m.steps, minutes: Math.max(1, m.minutes), seconds: m.seconds, km: m.km, kmSource: m.kmSource,
     avgCad: m.avgCad, kcal: m.kcal, feeling: feel, type: S._plan.type, route });
   const ms = measuredStride(m.kmSource === "gps" ? track.meters : 0, m.steps);
   if (ms) { S.strides = (S.strides || []).concat(ms).slice(-5); }
   save();
   run = { ...run, on: false, acc: 0 }; sc.reset(); track = createGpsTrack(); stopGps(); coach = freshCoach(coach.voice);
+  segs = [[]]; if (liveMap) { liveMap.remove(); liveMap = null; $("liveMapWrap").hidden = true; $("liveLegend").hidden = true; } follow = true; $("followBtn").hidden = true;
   $("finishCard").hidden = true; $("sosCard").hidden = true;
   show("homnay");
 });
@@ -577,10 +650,25 @@ function renderWeek() {
     const row = document.createElement("div");
     const a = document.createElement("span"); a.textContent = new Date(s.date + "T12:00:00").toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "numeric" }) + " · " + WALK_TYPES[s.type].name;
     const b = document.createElement("span"); b.className = "num"; b.textContent = fmt(s.steps) + " bước" + (s.km != null ? " · " + s.km.toLocaleString("vi-VN") + " km" : "") + " · " + s.minutes + "′" + (s.kcal ? " · " + s.kcal + " kcal" : "") + " · " + feelTxt[s.feeling];
-    row.append(a, b); h.appendChild(row);
+    const info = document.createElement("div"); info.style.cssText = "display:flex;flex-direction:column;gap:2px;min-width:0;align-items:flex-start";
+    b.style.fontSize = "13px"; b.style.color = "var(--muted)"; info.append(a, b); row.append(info);
+    const segsR = routeSegments(s.route);
+    if (segsR.flat().length > 1 && hasMap()) {
+      const btn = document.createElement("button"); btn.textContent = "Bản đồ"; btn.style.cssText = "min-height:38px;padding:6px 12px;flex:none;align-self:center";
+      btn.addEventListener("click", () => {
+        $("histMapCard").hidden = false;
+        $("histMapTitle").textContent = "Lộ trình " + a.textContent;
+        $("histMapInfo").textContent = b.textContent;
+        showRouteMap("hist", $("histMap"), segsR);
+        $("histMapCard").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      row.append(btn);
+    }
+    h.appendChild(row);
   });
   if (!S.sessions.length) h.textContent = "Chưa có buổi đi nào.";
 }
+$("histMapClose").addEventListener("click", () => { $("histMapCard").hidden = true; });
 $("adjBtn").addEventListener("click", () => {
   const { week } = weekData();
   const r = weeklyAdjust(S.profile, { group: S.group, target: S.target, capWeeks: S.capWeeks }, week);
@@ -648,7 +736,7 @@ function show(v) {
   VIEWS.forEach((x) => { const el = $("v-" + x); el.hidden = x !== v; if (x === v) el.style.display = "flex"; });
   document.querySelectorAll("nav button").forEach((b) => { if (b.dataset.view === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   if (v === "homnay") renderToday();
-  if (v === "dibo") renderRun();
+  if (v === "dibo") { renderRun(); if (liveMap) setTimeout(() => liveMap.invalidateSize(), 50); }
   if (v === "tuan") renderWeek();
   if (v === "hoso") { fillForm(); renderMetrics(); }
   window.scrollTo(0, 0);
