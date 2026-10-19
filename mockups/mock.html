@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tiktak Bus – mẫu giao diện</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.sign { display: inline-flex; align-items: center; justify-content: center; min-width: 46px; height: 32px; padding: 0 8px; border-radius: 7px;
+  background: #10161c; color: #ffb81c; font-weight: 800; font-size: 17px; letter-spacing: .02em; font-stretch: condensed; }
+.row { display: flex; align-items: center; gap: 12px; }
+.muted { color: var(--muted); }
+p { margin: 0; }
+.screen { width: 390px; min-height: 844px; padding-bottom: 28px; }
+
+/* ===================== A. MỀM MẠI ===================== */
+.A { --bg: #f3f6fb; --ink: #13243a; --muted: #5b6b80; --acc: #0b5cad; --acc2: #e8f1fc; background: var(--bg); color: var(--ink); }
+.A .band { background: linear-gradient(160deg, #0b5cad 0%, #1f86df 100%); color: #fff; padding: 22px 20px 70px; border-radius: 0 0 28px 28px; }
+.A .band .top { display: flex; justify-content: space-between; align-items: center; }
+.A .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; }
+.A .logo .mark { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.18); display: grid; place-items: center; }
+.A .chip-top { background: rgba(255,255,255,.18); border-radius: 999px; padding: 7px 12px; font-weight: 600; font-size: 14px; }
+.A .hello { margin-top: 18px; font-size: 15px; opacity: .9; }
+.A .hello b { display: block; font-size: 23px; margin-top: 2px; opacity: 1; }
+.A .card { background: #fff; border-radius: 22px; box-shadow: 0 10px 30px rgba(19,36,58,.10); margin: -50px 16px 0; padding: 16px; position: relative; }
+.A .field { display: flex; align-items: center; gap: 12px; padding: 12px 4px; }
+.A .field + .field { border-top: 1px solid #e6edf6; }
+.A .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+.A .dot.from { background: #e3f6ec; color: #17834f; }
+.A .dot.to { background: #fde9e7; color: #c0392b; }
+.A .lab { font-size: 12px; color: var(--muted); font-weight: 600; }
+.A .val { font-size: 17px; font-weight: 600; }
+.A .swap { position: absolute; right: 18px; top: 46px; width: 40px; height: 40px; border-radius: 50%; background: var(--acc2); color: var(--acc); display: grid; place-items: center; }
+.A .modes { display: flex; gap: 6px; margin: 10px 0 12px; overflow: hidden; }
+.A .modes span { padding: 8px 12px; border-radius: 999px; background: #f1f4f8; font-size: 14px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.A .modes span.on { background: var(--acc); color: #fff; }
+.A .cta { background: var(--acc); color: #fff; border-radius: 14px; height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 17px; }
+.A .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 16px 0; }
+.A .quick div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; text-align: center; }
+.A .quick .ic { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; }
+.A .sec { margin: 22px 20px 10px; display: flex; justify-content: space-between; align-items: baseline; }
+.A .sec h3 { margin: 0; font-size: 18px; }
+.A .sec a { color: var(--acc); font-weight: 600; font-size: 14px; }
+.A .list { background: #fff; border-radius: 20px; margin: 0 16px; padding: 4px 16px; box-shadow: 0 4px 14px rgba(19,36,58,.06); }
+.A .stop { padding: 12px 0; display: flex; align-items: center; gap: 12px; }
+.A .stop + .stop { border-top: 1px solid #edf1f6; }
+.A .stop .pin { width: 38px; height: 38px; border-radius: 12px; background: var(--acc2); color: var(--acc); display: grid; place-items: center; }
+.A .stop b { font-size: 16px; }
+.A .mini { display: flex; gap: 4px; margin-top: 5px; }
+.A .mini .sign { min-width: 34px; height: 22px; font-size: 12px; border-radius: 5px; padding: 0 5px; }
+
+/* ===================== B. BIỂN TRẠM ===================== */
+.B { --bg: #eef1f4; --ink: #0f1d2c; --muted: #5d6977; --navy: #0f2a4a; --yel: #ffb81c; background: var(--bg); color: var(--ink); }
+.B .head { background: var(--navy); color: #fff; padding: 20px 20px 18px; border-bottom: 5px solid var(--yel); }
+.B .head .top { display: flex; justify-content: space-between; align-items: center; }
+.B .logo { display: flex; align-items: center; gap: 10px; }
+.B .logo .sign { min-width: 54px; }
+.B .logo b { font-size: 22px; letter-spacing: -.01em; }
+.B .head .sub { margin-top: 10px; color: #b8c6d6; font-size: 14px; }
+.B .head .aa { border: 1.5px solid #4c6584; border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: 14px; }
+.B .block { background: #fff; margin: 14px 12px 0; border: 1px solid #d5dce4; border-radius: 10px; }
+.B .label { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.B .field { display: flex; gap: 12px; align-items: center; padding: 14px 16px; }
+.B .field + .field { border-top: 1px dashed #d5dce4; }
+.B .field .i { color: var(--navy); }
+.B .val { font-size: 18px; font-weight: 700; margin-top: 2px; }
+.B .modes { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #d5dce4; }
+.B .modes span { text-align: center; padding: 11px 2px; font-size: 13px; font-weight: 700; color: var(--muted); border-left: 1px solid #d5dce4; }
+.B .modes span:first-child { border-left: 0; }
+.B .modes span.on { color: var(--navy); box-shadow: inset 0 -3px 0 var(--yel); background: #fff8e6; }
+.B .cta { margin: 12px; background: var(--yel); color: var(--navy); border-radius: 10px; height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800; font-size: 17px; }
+.B .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 12px 0; }
+.B .quick div { background: #fff; border: 1px solid #d5dce4; border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+.B .quick .i { color: var(--navy); width: 26px; height: 26px; }
+.B .sec { margin: 22px 16px 8px; display: flex; align-items: center; gap: 8px; }
+.B .sec::before { content: ""; width: 4px; height: 18px; background: var(--yel); border-radius: 2px; }
+.B .stop { padding: 13px 16px; display: flex; gap: 12px; align-items: center; }
+.B .stop + .stop { border-top: 1px solid #e3e8ee; }
+.B .stop b { font-size: 16px; }
+.B .codes { display: flex; gap: 4px; margin-top: 6px; }
+.B .codes .sign { min-width: 34px; height: 22px; font-size: 12px; border-radius: 4px; padding: 0 5px; }
+.B .dist { margin-left: auto; text-align: right; font-weight: 800; color: var(--navy); font-size: 15px; }
+.B .dist small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+
+/* ===================== C. SÁNG TỐI GIẢN ===================== */
+.C { --bg: #ffffff; --ink: #18212b; --muted: #6a7480; --acc: #0f766e; --acc2: #e6f4f2; background: var(--bg); color: var(--ink); }
+.C .top { display: flex; justify-content: space-between; align-items: center; padding: 22px 20px 0; }
+.C .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
+.C .logo .sign { min-width: 44px; height: 30px; font-size: 15px; }
+.C .avatar { width: 40px; height: 40px; border-radius: 50%; background: #f2f4f6; display: grid; place-items: center; font-weight: 800; }
+.C h1 { font-size: 30px; line-height: 1.15; margin: 22px 20px 16px; letter-spacing: -.02em; }
+.C h1 span { color: var(--acc); }
+.C .search { margin: 0 16px; height: 64px; border-radius: 20px; background: #f2f4f6; display: flex; align-items: center; gap: 12px; padding: 0 18px; font-size: 18px; color: var(--muted); font-weight: 500; }
+.C .search .go { margin-left: auto; width: 44px; height: 44px; border-radius: 14px; background: var(--acc); color: #fff; display: grid; place-items: center; }
+.C .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 16px 0; }
+.C .tile { border-radius: 22px; padding: 16px; min-height: 112px; display: flex; flex-direction: column; justify-content: space-between; }
+.C .tile .ic { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.75); display: grid; place-items: center; }
+.C .tile b { font-size: 17px; }
+.C .tile p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.C .t1 { background: #e6f4f2; color: #0f5f58; } .C .t2 { background: #fff3e0; color: #9a5800; }
+.C .t3 { background: #eef1fb; color: #3446a3; } .C .t4 { background: #fbecef; color: #a3324b; }
+.C .sec { margin: 26px 20px 6px; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.C .stop { margin: 0 20px; padding: 14px 0; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #eef0f2; }
+.C .stop .ic { width: 42px; height: 42px; border-radius: 50%; background: var(--acc2); color: var(--acc); display: grid; place-items: center; }
+.C .stop b { font-size: 16px; }
+.C .stop .codes { display: flex; gap: 4px; margin-top: 5px; }
+.C .stop .codes .sign { min-width: 32px; height: 21px; font-size: 12px; border-radius: 5px; padding: 0 5px; }
+.C .stop .chev { margin-left: auto; color: #b3bac2; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="swap" viewBox="0 0 24 24"><path d="M7 20V4M7 4 4 7M7 4l3 3M17 4v16M17 20l-3-3M17 20l3-3"/></symbol>
+  <symbol id="bus" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18v3M16 18v3"/><circle cx="8.5" cy="14.5" r=".8"/><circle cx="15.5" cy="14.5" r=".8"/></symbol>
+  <symbol id="home" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7M5 10v10h14V10M10 20v-5h4v5"/></symbol>
+  <symbol id="route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
+  <symbol id="stop" viewBox="0 0 24 24"><path d="M12 11v10M8 21h8"/><rect x="6" y="3" width="12" height="8" rx="2"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="text" viewBox="0 0 24 24"><path d="M4 7V5h10v2M9 5v14M7 19h4M14 12h6M17 12v7M15.5 19h3"/></symbol>
+</svg>
+
+<!-- ============ A ============ -->
+<div class="screen A" id="A">
+  <div class="band">
+    <div class="top">
+      <div class="logo"><span class="mark"><svg class="i"><use href="#bus"/></svg></span>Tiktak Bus</div>
+      <span class="chip-top">A+ Chữ to</span>
+    </div>
+    <p class="hello">Chào buổi sáng<b>Hôm nay bạn đi đâu?</b></p>
+  </div>
+  <div class="card">
+    <div class="field"><span class="dot from"><svg class="i"><use href="#locate"/></svg></span><div><p class="lab">Đi từ</p><p class="val">Vị trí của tôi</p></div></div>
+    <div class="field"><span class="dot to"><svg class="i"><use href="#pin"/></svg></span><div><p class="lab">Đến</p><p class="val">Bệnh viện Bạch Mai</p></div></div>
+    <span class="swap"><svg class="i"><use href="#swap"/></svg></span>
+    <div class="modes"><span class="on">Dễ đi</span><span>Ít đi bộ</span><span>Ít đổi xe</span><span>Ít trạm</span></div>
+    <div class="cta"><svg class="i"><use href="#search"/></svg>Chỉ đường cho tôi</div>
+  </div>
+  <div class="quick">
+    <div><span class="ic" style="background:#e3f6ec;color:#17834f"><svg class="i"><use href="#home"/></svg></span>Về nhà</div>
+    <div><span class="ic" style="background:#e8f1fc;color:#0b5cad"><svg class="i"><use href="#locate"/></svg></span>Gần tôi</div>
+    <div><span class="ic" style="background:#fff3dc;color:#9a6200"><svg class="i"><use href="#stop"/></svg></span>Xe qua trạm</div>
+    <div><span class="ic" style="background:#f0eafd;color:#6b3fc4"><svg class="i"><use href="#route"/></svg></span>Tra tuyến</div>
+  </div>
+  <div class="sec"><h3>Bến gần bạn</h3><a>Xem tất cả</a></div>
+  <div class="list">
+    <div class="stop"><span class="pin"><svg class="i"><use href="#stop"/></svg></span><div style="flex:1"><b>Bệnh viện Bạch Mai</b><p class="muted" style="font-size:13px">40 m · 13 tuyến</p><div class="mini"><span class="sign">03A</span><span class="sign">08B</span><span class="sign">21A</span><span class="sign">32</span></div></div><svg class="i muted"><use href="#chev"/></svg></div>
+    <div class="stop"><span class="pin"><svg class="i"><use href="#stop"/></svg></span><div style="flex:1"><b>175 Giải Phóng</b><p class="muted" style="font-size:13px">60 m · 9 tuyến</p><div class="mini"><span class="sign">28</span><span class="sign">32</span><span class="sign">E08</span></div></div><svg class="i muted"><use href="#chev"/></svg></div>
+  </div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="screen B" id="B">
+  <div class="head">
+    <div class="top">
+      <div class="logo"><span class="sign">BUS</span><b>Tiktak Bus</b></div>
+      <span class="aa">A+</span>
+    </div>
+    <p class="sub">Xe buýt Hà Nội · 163 tuyến · dữ liệu 18/10</p>
+  </div>
+  <div class="block">
+    <div class="field"><svg class="i"><use href="#locate"/></svg><div><p class="label">Đi từ</p><p class="val">Vị trí của tôi</p></div><svg class="i" style="margin-left:auto;color:#5d6977"><use href="#swap"/></svg></div>
+    <div class="field"><svg class="i"><use href="#flag"/></svg><div><p class="label">Đến</p><p class="val">Bệnh viện Bạch Mai</p></div></div>
+    <div class="modes"><span class="on">Dễ đi</span><span>Ít đi bộ</span><span>Ít đổi xe</span><span>Ít trạm</span></div>
+  </div>
+  <div class="cta"><svg class="i"><use href="#arrow"/></svg>CHỈ ĐƯỜNG</div>
+  <div class="quick">
+    <div><svg class="i"><use href="#home"/></svg>Về nhà</div>
+    <div><svg class="i"><use href="#locate"/></svg>Gần tôi</div>
+    <div><svg class="i"><use href="#stop"/></svg>Xe qua trạm</div>
+    <div><svg class="i"><use href="#route"/></svg>Tra tuyến</div>
+  </div>
+  <div class="sec"><span class="label" style="color:#0f1d2c;font-size:12px">Bến gần bạn</span></div>
+  <div class="block" style="margin-top:0">
+    <div class="stop"><div><b>Bệnh viện Bạch Mai</b><div class="codes"><span class="sign">03A</span><span class="sign">08B</span><span class="sign">21A</span><span class="sign">32</span></div></div><p class="dist">40 m<small>13 tuyến</small></p></div>
+    <div class="stop"><div><b>175 Giải Phóng</b><div class="codes"><span class="sign">28</span><span class="sign">32</span><span class="sign">E08</span></div></div><p class="dist">60 m<small>9 tuyến</small></p></div>
+  </div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="screen C" id="C">
+  <div class="top">
+    <div class="logo"><span class="sign">BUS</span>Tiktak</div>
+    <span class="avatar">A+</span>
+  </div>
+  <h1>Bạn muốn<br><span>đi đâu</span> hôm nay?</h1>
+  <div class="search"><svg class="i"><use href="#search"/></svg>Nhập nơi muốn đến<span class="go"><svg class="i"><use href="#arrow"/></svg></span></div>
+  <div class="grid">
+    <div class="tile t1"><span class="ic"><svg class="i"><use href="#home"/></svg></span><div><b>Về nhà</b><p>1 chạm là có đường</p></div></div>
+    <div class="tile t2"><span class="ic"><svg class="i"><use href="#locate"/></svg></span><div><b>Gần tôi</b><p>Bến và xe quanh đây</p></div></div>
+    <div class="tile t3"><span class="ic"><svg class="i"><use href="#stop"/></svg></span><div><b>Xe qua trạm</b><p>Tuyến nào dừng ở đây</p></div></div>
+    <div class="tile t4"><span class="ic"><svg class="i"><use href="#route"/></svg></span><div><b>Tra tuyến</b><p>Xem các trạm của tuyến</p></div></div>
+  </div>
+  <p class="sec">Bến gần bạn</p>
+  <div class="stop"><span class="ic"><svg class="i"><use href="#stop"/></svg></span><div><b>Bệnh viện Bạch Mai</b><p class="muted" style="font-size:13px">40 m · 13 tuyến</p><div class="codes"><span class="sign">03A</span><span class="sign">08B</span><span class="sign">21A</span></div></div><svg class="i chev"><use href="#chev"/></svg></div>
+  <div class="stop"><span class="ic"><svg class="i"><use href="#stop"/></svg></span><div><b>175 Giải Phóng</b><p class="muted" style="font-size:13px">60 m · 9 tuyến</p><div class="codes"><span class="sign">28</span><span class="sign">32</span><span class="sign">E08</span></div></div><svg class="i chev"><use href="#chev"/></svg></div>
+</div>
+</body>
+</html>
