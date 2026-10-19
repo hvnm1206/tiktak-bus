@@ -119,10 +119,10 @@ svg.i { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-
 .pt { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
 .pt .dot { margin-top: 30px; }
 .points { position: relative; }
-.dotcol { display: flex; flex-direction: column; align-items: center; justify-content: space-between; align-self: stretch; padding-top: 30px; gap: 8px; }
+.dotcol { display: flex; flex-direction: column; align-items: center; justify-content: space-between; align-self: stretch; padding-top: 30px; gap: 4px; }
 .dotcol .dot { margin-top: 0; }
 .points .stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.swap { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent-2); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
+.swap { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--accent-2); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
 .dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .dot.from { background: var(--t-green-bg); color: var(--t-green); }
 .dot.to { background: var(--t-red-bg); color: var(--t-red); }
@@ -134,7 +134,10 @@ svg.i { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-
 .saved { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; border: 0; background: var(--surface-2); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 44px; font-weight: 600; font-size: .9em; }
 .chip.ghost { background: transparent; box-shadow: inset 0 0 0 2px var(--line); color: var(--ink-2); font-weight: 500; }
-.chip.loc { background: var(--t-green-bg); color: var(--t-green); }
+.gpslink { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; border: 0; background: none; color: var(--accent); font-weight: 600; font-size: .78em;
+  padding: 2px 2px; min-height: 36px; cursor: pointer; line-height: 1.3; text-align: left; }
+.gpslink svg.i { width: 1.1em; height: 1.1em; }
+.gpslink.done { color: var(--ink-2); font-weight: 500; }
 .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 html.big .modes { grid-template-columns: repeat(2, 1fr); }
 .modes button { border: 0; background: var(--surface-2); color: var(--ink-2); border-radius: 999px; padding: 8px 4px; font-weight: 600; cursor: pointer; min-height: 44px; font-size: .82em; line-height: 1.2; }
@@ -315,7 +318,7 @@ footer svg.i { margin-top: .15em; }
               <label for="from">Đi từ</label>
               <input id="from" autocomplete="off" placeholder="Tên trạm, đường, bệnh viện…">
               <div class="suggest" id="from-sug" hidden></div>
-              <button type="button" class="chip loc" id="gps" style="align-self:flex-start"><svg class="i"><use href="#i-locate"/></svg><span>Dùng vị trí của tôi</span></button>
+              <button type="button" class="gpslink" id="gps"><svg class="i"><use href="#i-locate"/></svg><span>Dùng vị trí của tôi</span></button>
             </div>
           </div>
           <div class="pt">
@@ -755,7 +758,7 @@ footer svg.i { margin-top: .15em; }
         btn.onclick = function () { var h = hits[+btn.dataset.i]; inp.value = h.name; if (inp._syncClear) inp._syncClear(); box.hidden = true; onPick({ name: h.name, pos: h.pos, id: h.id }); };
       });
     }
-    inp.addEventListener('input', function () { if (inputId === 'from' || inputId === 'to') sel[inputId] = null; render(); });
+    inp.addEventListener('input', function () { if (inputId === 'from' || inputId === 'to') sel[inputId] = null; if (inputId === 'from') resetGps(); render(); });
     inp.addEventListener('focus', render);
     inp.addEventListener('blur', function () { setTimeout(function () { box.hidden = true; }, 200); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { box.hidden = true; if (inputId === 'from' || inputId === 'to') plan(); } });
@@ -783,12 +786,13 @@ footer svg.i { margin-top: .15em; }
       var near = eng.near(pos, 3000)[0];
       if (!near) { btn.textContent = 'Dùng vị trí của tôi'; toast('Vị trí của bạn có vẻ ngoài vùng xe buýt Hà Nội.'); return; }
       $('from').value = 'Vị trí của tôi'; if ($('from')._syncClear) $('from')._syncClear(); sel.from = { name: 'Vị trí của tôi', pos: pos };
-      btn.textContent = 'Đã lấy vị trí (sai số ~' + Math.round(p.coords.accuracy) + ' m)';
+      btn.textContent = 'Đã lấy vị trí · sai số ~' + Math.round(p.coords.accuracy) + ' m'; $('gps').classList.add('done');
     }, function () {
       btn.textContent = 'Dùng vị trí của tôi';
       toast('Chưa lấy được vị trí. Hãy cho phép định vị, hoặc gõ tên trạm gần bạn.');
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
   };
+  function resetGps() { var g = $('gps'); if (g && g.classList.contains('done')) { g.classList.remove('done'); g.querySelector('span').textContent = 'Dùng vị trí của tôi'; } }
   showSug('to', function (p) { sel.to = p; });
   $('swap').onclick = function () { var a = $('from').value, b = $('to').value, s = sel.from; $('from').value = b; $('to').value = a; sel.from = sel.to; sel.to = s; ['from','to'].forEach(function (k) { if ($(k)._syncClear) $(k)._syncClear(); }); };
 
@@ -982,6 +986,7 @@ footer svg.i { margin-top: .15em; }
     btn.onclick = function () {
       inp.value = ''; sync();
       if (id === 'from' || id === 'to') { sel[id] = null; }
+      if (id === 'from') resetGps();
       if (id === 'routeq') { $('route-picks').innerHTML = ''; }
       var sug = $(id + '-sug'); if (sug) sug.hidden = true;
       inp.focus();
