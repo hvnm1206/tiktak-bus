@@ -1,0 +1,9 @@
+# Netlify: phục vụ thư mục site/ đã đóng gói sẵn, không cần build
+[build]
+  publish = "site"
+  command = "echo static"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

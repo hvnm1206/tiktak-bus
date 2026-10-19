@@ -4,3 +4,4 @@ dist/local.html
 node_modules/
 __pycache__/
 *.zip
+.netlify
