@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NMH Apps</title>
+<meta name="description" content="Tất cả app của Nomahub ở một chỗ">
+<meta name="theme-color" content="#0b5cad">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="/apps/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apps/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NMH Apps">
+<style>
+:root { --bg:#f3f6fb; --card:#fff; --ink:#13243a; --ink-2:#5b6b80; --line:#e3eaf3; --acc:#0b5cad; --b1:#0b5cad; --b2:#1f86df;
+  --shadow:0 4px 14px rgb(19 36 58 / .07); color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0b141c; --card:#14212c; --ink:#e8f0f7; --ink-2:#9fb2c3; --line:#253747; --acc:#4ea3f5; --b1:#0a3f78; --b2:#135ea8;
+  --shadow:0 4px 14px rgb(0 0 0 / .3); color-scheme: dark; } }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 "Be Vietnam Pro", "Segoe UI", Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.band { background: linear-gradient(160deg, var(--b1), var(--b2)); color: #fff; border-radius: 0 0 28px 28px;
+  padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 64px; }
+.in { max-width: 560px; margin: 0 auto; }
+.band h1 { margin: 0; font-size: 1.5em; font-weight: 800; letter-spacing: -.01em; }
+.band p { margin: 4px 0 0; opacity: .9; font-size: .92em; }
+main { max-width: 560px; margin: -44px auto 0; padding: 0 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+.app { display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: 20px; padding: 14px; box-shadow: var(--shadow);
+  text-decoration: none; color: inherit; min-height: 80px; }
+.app:active { transform: scale(.99); }
+.ic { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; flex: none; }
+.ic svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.t { flex: 1; min-width: 0; }
+.t b { display: block; font-size: 1.05em; }
+.t span { color: var(--ink-2); font-size: .85em; }
+.tag { font-size: .68em; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 2px; }
+.tag.live { background: #dff3e9; color: #13583c; }
+.tag.beta { background: #fff1d6; color: #7a4a00; }
+.go { color: var(--ink-2); }
+.go svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.share { margin-top: 6px; display: flex; gap: 8px; }
+.share button { flex: 1; border: 0; background: var(--card); color: var(--acc); box-shadow: var(--shadow); border-radius: 14px; min-height: 50px; font: inherit; font-weight: 700; cursor: pointer; }
+.tip { color: var(--ink-2); font-size: .85em; margin: 6px 4px 0; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="band"><div class="in">
+  <h1>NMH Apps</h1>
+  <p>Tất cả app của Nomahub ở một chỗ</p>
+</div></div>
+
+<main>
+  <a class="app" href="https://bus.nomahubvn.com/">
+    <span class="ic" style="background:#e8f1fc;color:#0b5cad"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18v3M16 18v3"/></svg></span>
+    <span class="t"><b>Tiktak Bus <span class="tag live">Đang chạy</span></b><span>Tìm đường xe buýt Hà Nội, nhắc xuống xe</span></span>
+    <span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="app" href="https://bus.nomahubvn.com/dibo/">
+    <span class="ic" style="background:#e3f6ec;color:#17834f"><svg viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3M9 12l1-4 4 1 2 3 3 1M10 8l-3 2-1 3"/></svg></span>
+    <span class="t"><b>TikTak Đi Bộ <span class="tag beta">Thử</span></b><span>Đi bộ thể thao, đếm bước, theo thể trạng</span></span>
+    <span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+  </a>
+  <a class="app" href="https://nmh-cmt.netlify.app/">
+    <span class="ic" style="background:#fff3dc;color:#9a6200"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span>
+    <span class="t"><b>CMT <span class="tag beta">Thử</span></b><span>Kho trải nghiệm tốt: hỏi và mách nhau</span></span>
+    <span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+  </a>
+
+  <div class="share">
+    <button id="share">Gửi trang này</button>
+  </div>
+  <p class="tip">Thêm vào màn hình chính để mở nhanh: iPhone bấm Chia sẻ → Thêm vào MH chính. Android bấm ⋮ → Thêm vào màn hình chính.</p>
+</main>
+<div class="toast" id="toast" hidden></div>
+<script>
+document.getElementById('share').onclick = function () {
+  var url = 'https://bus.nomahubvn.com/apps/', t = document.getElementById('toast');
+  function show(m) { t.textContent = m; t.hidden = false; setTimeout(function () { t.hidden = true; }, 2400); }
+  if (navigator.share) { navigator.share({ title: 'NMH Apps', url: url }).catch(function () {}); return; }
+  try { navigator.clipboard.writeText(url).then(function () { show('Đã sao chép link'); }, function () { show(url); }); } catch (e) { show(url); }
+};
+</script>
+</body>
+</html>
