@@ -71,3 +71,19 @@ test("Không vượt trần nhóm", () => {
   const w = E.weeklyAdjust({ ...nam35, activity: "vua" }, { group: "B", target: 9800 }, { daysMet: 7, daysTotal: 7, tiredCount: 0, daysInactive: 0 });
   assert.equal(w.target, 10000);
 });
+
+test("Tiểu đường: lời khuyên theo thuốc đang dùng", () => {
+  const base = { sex: "nam", age: 50, height: 168, weight: 70, activity: "vua", goal: "duonghuyet", conditions: ["tieuduong"] };
+  const plan = (hypoMeds) => E.planSession({ ...base, hypoMeds }, { group: "A", target: 5000 }, 0).notes.join(" | ");
+  const co = plan("co"), khong = plan("khong"), chuaro = plan("chuaro");
+  assert.match(co, /15 g đường/); assert.match(co, /5,0 mmol/);
+  assert.doesNotMatch(khong, /đường hấp thu nhanh|kẹo|ngọt/); assert.match(khong, /sau bữa ăn/);
+  assert.doesNotMatch(chuaro, /kẹo|ngọt/); assert.match(chuaro, /cập nhật trong Hồ sơ/);
+  for (const n of [co, khong, chuaro]) assert.doesNotMatch(n, /đồ ăn ngọt/);
+});
+
+test("Không tiểu đường, mục tiêu đường huyết: chỉ gợi ý đi sau bữa tối", () => {
+  const p = { sex: "nu", age: 40, height: 158, weight: 55, activity: "vua", goal: "duonghuyet", conditions: [] };
+  const n = E.planSession(p, { group: "B", target: 7000 }, 0).notes;
+  assert.deepEqual(n, ["Thêm 10–15 phút đi nhẹ sau bữa tối."]);
+});

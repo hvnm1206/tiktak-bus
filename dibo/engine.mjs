@@ -161,8 +161,7 @@ export function planSession(p, state, stepsToday = 0, opts = {}) {
   if (flags.includes("khop") && minutes > 30) {
     notes.push(`Chia thành ${Math.ceil(minutes / 30)} buổi ngắn, mỗi buổi tối đa 30 phút.`);
   }
-  if (flags.includes("tieuduong")) notes.push("Ưu tiên đi sau bữa ăn; mang theo đồ ăn ngọt dự phòng.");
-  if (p.goal === "duonghuyet" && !flags.includes("tieuduong")) notes.push("Thêm 10–15 phút đi nhẹ sau bữa tối.");
+  notes.push(...diabetesNotes(p, flags));
   if (flags.includes("tim")) notes.push("Giữ nhịp nhẹ–vừa. Hỏi ý kiến bác sĩ trước khi tăng cường độ.");
   if (flags.includes("mangthai")) notes.push("Chỉ đi nhẹ–vừa, dừng ngay nếu chóng mặt hoặc khó thở.");
 
@@ -180,6 +179,24 @@ export function planSession(p, state, stepsToday = 0, opts = {}) {
     intensity: intensityFromCadence(cadence),
     notes,
   };
+}
+
+// Lời khuyên đường huyết theo hồ sơ.
+// p.hypoMeds: "co" (insulin / sulfonylurea), "khong", "chuaro" — chỉ hỏi khi có cờ tiểu đường.
+export function diabetesNotes(p, flags) {
+  const out = [];
+  if (flags.includes("tieuduong")) {
+    out.push("Đi trong khoảng 30 phút sau bữa ăn giúp hạ đường huyết sau ăn.");
+    if (p.hypoMeds === "co") {
+      out.push("Bạn dùng insulin hoặc thuốc dễ gây hạ đường huyết: đo đường huyết trước khi đi nếu có máy; dưới 5,0 mmol/L thì ăn nhẹ rồi mới đi.");
+      out.push("Mang theo khoảng 15 g đường hấp thu nhanh (viên glucose hoặc 3–4 viên kẹo cứng) chỉ để dùng khi thấy run tay, vã mồ hôi, chóng mặt; nghỉ 15 phút rồi đo lại.");
+    } else if (p.hypoMeds !== "khong") {
+      out.push("Nếu bạn tiêm insulin hoặc uống thuốc nhóm sulfonylurea (gliclazide, glimepiride…), hãy cập nhật trong Hồ sơ để nhận lời khuyên phòng hạ đường huyết.");
+    }
+  } else if (p.goal === "duonghuyet") {
+    out.push("Thêm 10–15 phút đi nhẹ sau bữa tối.");
+  }
+  return out;
 }
 
 // ---- 5. Điều chỉnh hằng tuần ----

@@ -236,6 +236,9 @@ nav button[aria-current="page"]{color:var(--accent)}
         <div class="eyebrow" style="margin-bottom:6px">Tình trạng sức khỏe (tùy chọn)</div>
         <div class="legal" style="margin-bottom:8px">Đây là dữ liệu cá nhân nhạy cảm. Chỉ dùng để giới hạn cường độ cho an toàn, lưu trên máy này, không gửi đi đâu.</div>
         <div class="checks" id="conds"></div>
+        <label for="hypoMeds" id="hypoWrap" hidden style="margin-top:10px">Bạn có tiêm insulin hoặc uống thuốc nhóm sulfonylurea (gliclazide, glimepiride…) không?
+          <select id="hypoMeds"><option value="chuaro">Chưa rõ</option><option value="co">Có</option><option value="khong">Không (chỉ metformin, thuốc khác hoặc ăn kiêng)</option></select>
+        </label>
       </div>
       <div class="legal" id="formErr" hidden style="color:var(--warn)"></div>
       <button class="primary" type="submit">Lưu và tính lại</button>
@@ -687,10 +690,13 @@ Object.entries(CONDITIONS).forEach(([k, v]) => {
   const i = document.createElement("input"); i.type = "checkbox"; i.id = "c-" + k; i.value = k;
   l.append(i, document.createTextNode(v)); condBox.appendChild(l);
 });
+function syncHypo() { $("hypoWrap").hidden = !$("c-tieuduong").checked; }
+$("conds").addEventListener("change", syncHypo);
 function fillForm() {
   const p = S.profile;
   for (const k of ["sex", "age", "height", "weight", "activity", "goal", "baseline", "restHr"]) $(k).value = p[k] ?? "";
   Object.keys(CONDITIONS).forEach((k) => ($("c-" + k).checked = p.conditions.includes(k)));
+  $("hypoMeds").value = p.hypoMeds || "chuaro"; syncHypo();
 }
 function renderMetrics() {
   const c = computeProfile(S.profile, S.profile.baseline || 0);
@@ -713,6 +719,7 @@ $("pf").addEventListener("submit", (e) => {
   const v = (k) => $(k).value;
   const p = { sex: v("sex"), age: +v("age"), height: +v("height"), weight: +v("weight"), activity: v("activity"), goal: v("goal"),
     baseline: +v("baseline") || 0, restHr: +v("restHr") || null, conditions: Object.keys(CONDITIONS).filter((k) => $("c-" + k).checked) };
+  p.hypoMeds = p.conditions.includes("tieuduong") ? v("hypoMeds") : null;
   const err = [];
   if (!(p.age >= 12 && p.age <= 100)) err.push("tuổi từ 12 đến 100");
   if (!(p.height >= 120 && p.height <= 220)) err.push("chiều cao 120–220 cm");
