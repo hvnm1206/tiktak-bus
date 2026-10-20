@@ -47,6 +47,8 @@ h2{font-size:17px;font-weight:600}
 .stat{background:var(--bg);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat b{font-family:var(--f-display);font-size:19px;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--muted)}
+.gps-help{background:var(--sun-soft);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;font-size:14.5px}
+.gps-help ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .map{height:280px;border-radius:12px;overflow:hidden;border:1px solid var(--line);z-index:0}
 .map-wrap{position:relative}
@@ -152,7 +154,16 @@ nav button[aria-current="page"]{color:var(--accent)}
         <div class="stat"><b id="liveCad">–</b><span>bước/phút</span></div>
         <div class="stat"><b id="liveKm">0</b><span id="kmLbl">km</span></div>
       </div>
-      <div class="chips"><span class="chip" id="gpsChip">GPS chưa bật</span><span class="chip sun" id="speedChip" hidden></span><span class="chip warn" id="adviceChip" hidden></span></div>
+      <div class="chips"><button class="chip" id="gpsChip" type="button" style="border:0;min-height:30px;cursor:pointer">GPS chưa bật</button><span class="chip sun" id="speedChip" hidden></span><span class="chip warn" id="adviceChip" hidden></span></div>
+      <div class="gps-help" id="gpsHelp" hidden>
+        <b id="gpsHelpTitle"></b>
+        <ol id="gpsHelpSteps"></ol>
+        <div class="row" id="gpsHelpBtns">
+          <button class="primary" id="gpsRetry" type="button">Thử lại GPS</button>
+          <button id="gpsSkip" type="button">Đi không cần GPS</button>
+        </div>
+        <div class="legal">Không có GPS, app vẫn đếm bước và tính quãng đường theo sải chân.</div>
+      </div>
       <div class="map-wrap" id="liveMapWrap" hidden><div class="map" id="liveMap"></div><button class="map-btn" id="followBtn" hidden>Về vị trí của tôi</button></div>
       <div class="legend" id="liveLegend" hidden><span><i style="background:var(--accent)"></i>Buổi này</span><span><i style="background:var(--sun);opacity:.6"></i>Các buổi trước</span></div>
       <div class="phase" id="phase">Giữ nhịp đều</div>
@@ -748,7 +759,8 @@ function renderRun() {
   const d = liveDistance(steps);
   $("liveKm").textContent = d.km === null ? "–" : d.km.toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   $("kmLbl").textContent = d.src === "gps" ? "km · GPS" : d.src === "buoc" ? "km · theo bước" : "km";
-  $("gpsChip").textContent = { off: "GPS chưa bật", wait: "Đang tìm GPS…", on: "GPS đang đo", denied: "GPS chưa được cho phép", none: "Không có GPS" }[gps];
+  $("gpsChip").textContent = { off: "GPS chưa bật", wait: "Đang tìm GPS…", on: "GPS đang đo", denied: "GPS chưa chạy · bấm để thử lại", none: "Không có GPS" }[gps];
+  if (gps === "wait" && !gpsReason && Date.now() - gpsSince > 25000) renderGpsHelp();
   const sp = liveSpeed(cad);
   $("speedChip").hidden = !sp; if (sp) $("speedChip").textContent = sp.toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " km/h";
   const adv = run.on && sensor === "on" && sc.walking ? cadenceAdvice(currentCadence().c, cad) : null;
@@ -757,8 +769,8 @@ function renderRun() {
     off: "bước · bấm Bắt đầu để bật cảm biến",
     listening: "bước · đang bật cảm biến…",
     on: run.on ? (sc.walking ? "bước · đang đếm" : "bước · đứng yên, chưa đếm") : "bước · đang tạm dừng",
-    denied: "Không đếm được bước: chưa cho phép cảm biến chuyển động. Mở bằng Safari tại bus.nomahubvn.com/dibo và bấm Cho phép.",
-    none: "Không đếm được bước: trình duyệt này không gửi dữ liệu cảm biến. Mở bằng Safari tại bus.nomahubvn.com/dibo.",
+    denied: "Không đếm được bước: chưa cho phép cảm biến chuyển động. " + (isAndroid ? "Bấm biểu tượng bên trái địa chỉ web → Quyền → Cảm biến chuyển động → Cho phép." : "Mở bằng Safari tại bus.nomahubvn.com/dibo và bấm Cho phép."),
+    none: "Không đếm được bước: " + (inAppName ? "trình duyệt trong " + (inAppName === "app" ? "ứng dụng này" : inAppName) + " chặn cảm biến. Mở bằng " + (isAndroid ? "Chrome." : "Safari.") : "trình duyệt này không gửi dữ liệu cảm biến. Mở bằng " + (isAndroid ? "Chrome" : "Safari") + " tại bus.nomahubvn.com/dibo."),
   }[sensor];
   $("phase").textContent = currentCadence().label;
   $("runBtn").textContent = run.on ? "Tạm dừng" : (run.acc ? "Đi tiếp" : "Bắt đầu");
@@ -792,20 +804,103 @@ async function keepAwake() {
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
 // ---- GPS ----
-function startGps() {
-  if (gpsWatch !== null) return;
-  if (!navigator.geolocation) { gps = "none"; return; }
-  gps = "wait";
+// ---- Nhận biết máy và trình duyệt để hướng dẫn đúng ----
+const UA = navigator.userAgent || "";
+const isIOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(UA);
+const inAppName = /Zalo/i.test(UA) ? "Zalo" : /FBAN|FBAV|FB_IAB|FBIOS/.test(UA) ? "Facebook" : /Instagram/.test(UA) ? "Instagram" : /TikTok|musical_ly|BytedanceWebview/i.test(UA) ? "TikTok" : /Line\//.test(UA) ? "Line" : (isAndroid && /; wv\)/.test(UA)) ? "app" : null;
+let gpsSince = 0, gpsLowAcc = false, gpsSkipped = false, gpsReason = null, gpsCheckT = null, gpsGotFix = false;
+// 8 giây chưa có vị trí: hỏi trình duyệt xem quyền đang ở trạng thái nào để chỉ đúng chỗ
+async function checkGpsStuck() {
+  if (gps === "on" || gpsSkipped || gpsWatch === null) return;
+  let st = null;
+  try { st = navigator.permissions ? (await navigator.permissions.query({ name: "geolocation" })).state : null; } catch (e) {}
+  if (gps === "on") return;
+  if (st === "denied") { gps = "denied"; gpsReason = "denied"; clearGpsWatch(); }
+  else if (st === "prompt") gpsReason = "prompt";
+  else if (!gpsLowAcc) { gpsLowAcc = true; startGps(true); return; }
+  else gpsReason = "weak";
+  renderGpsHelp(); renderRun();
+  if (gpsReason === "prompt" || gpsReason === "weak") gpsCheckT = setTimeout(checkGpsStuck, 8000);
+}
+
+function clearGpsWatch() { if (gpsWatch !== null) { try { navigator.geolocation.clearWatch(gpsWatch); } catch (e) {} gpsWatch = null; } }
+function startGps(force) {
+  if (gpsWatch !== null && !force) return;
+  clearGpsWatch();
+  if (inAppName) { gps = "denied"; gpsReason = "inapp"; renderGpsHelp(); return; }
+  if (!navigator.geolocation || !window.isSecureContext) { gps = "none"; gpsReason = "none"; renderGpsHelp(); return; }
+  gps = "wait"; gpsReason = null; gpsSince = Date.now(); renderGpsHelp();
+  clearTimeout(gpsCheckT);
+  gpsCheckT = setTimeout(checkGpsStuck, 8000);
   try {
     gpsWatch = navigator.geolocation.watchPosition((pos) => {
-      gps = "on";
+      gps = "on"; gpsGotFix = true; gpsReason = null; clearTimeout(gpsCheckT); renderGpsHelp();
       const la = pos.coords.latitude, lo = pos.coords.longitude;
       const added = run.on ? track.add({ lat: la, lon: lo, acc: pos.coords.accuracy, t: Date.now() / 1000 }) : false;
       onGpsPoint(la, lo, added);
-    }, (err) => { gps = err.code === 1 ? "denied" : (gps === "on" ? "on" : "wait"); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
-  } catch (e) { gps = "none"; }
+    }, (err) => {
+      if (gpsGotFix && err.code !== 1) return;                                                   // đang đo mà mất sóng tạm thời: tiếp tục chờ
+      if (err.code === 1) { gps = "denied"; gpsReason = "denied"; clearGpsWatch(); }
+      else if (err.code === 2) { gps = "denied"; gpsReason = "off"; clearGpsWatch(); }          // chưa từng bắt được vị trí: định vị của máy đang tắt
+      else if (gps !== "on" && !gpsLowAcc) { gpsLowAcc = true; startGps(true); return; }        // quá lâu: chuyển chế độ nhanh
+      else if (gps !== "on") { gpsReason = "weak"; }
+      renderGpsHelp(); renderRun();
+    }, { enableHighAccuracy: !gpsLowAcc, maximumAge: 5000, timeout: 15000 });
+  } catch (e) { gps = "none"; gpsReason = "none"; renderGpsHelp(); }
 }
-function stopGps() { if (gpsWatch !== null) { try { navigator.geolocation.clearWatch(gpsWatch); } catch (e) {} gpsWatch = null; } if (gps === "on" || gps === "wait") gps = "off"; }
+// Người dùng bật quyền trong cài đặt rồi quay lại: tự chạy lại, không cần tải trang
+try {
+  navigator.permissions && navigator.permissions.query({ name: "geolocation" }).then((st) => {
+    st.onchange = () => { if (st.state === "granted" && gps !== "on" && !gpsSkipped && (run.on || run.acc)) startGps(true); };
+  }).catch(() => {});
+} catch (e) {}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && (gpsReason === "denied" || gpsReason === "off") && run.on && !gpsSkipped) startGps(true);
+});
+
+const GPS_HELP = {
+  inapp: () => ({ title: "Bạn đang mở trong " + (inAppName === "app" ? "trình duyệt của một ứng dụng" : inAppName) + ", nơi không cho dùng GPS và cảm biến.",
+    steps: isAndroid ? ["Bấm nút ⋮ hoặc ··· ở góc trên.", "Chọn \"Mở bằng trình duyệt\" hoặc \"Mở trong Chrome\".", "Hoặc bấm nút \"Mở bằng Chrome\" bên dưới."]
+      : ["Bấm nút ··· hoặc biểu tượng la bàn ở góc.", "Chọn \"Mở bằng Safari\".", "Hoặc bấm \"Chép link\" rồi dán vào Safari."] }),
+  denied: () => ({ title: "App chưa được phép dùng vị trí.",
+    steps: isAndroid ? ["Bấm biểu tượng ⊶ (hoặc ổ khóa) bên trái địa chỉ web phía trên.", "Chọn Quyền (hoặc Cài đặt trang web) → Vị trí → Cho phép.", "Quay lại đây, bấm \"Thử lại GPS\".", "Không thấy mục Vị trí: vào Cài đặt điện thoại → Ứng dụng → Chrome → Quyền → Vị trí → Chỉ cho phép khi đang dùng."]
+      : isIOS ? ["Mở Cài đặt → Quyền riêng tư & Bảo mật → Dịch vụ định vị → Trang web Safari → Khi dùng ứng dụng, bật Vị trí chính xác.", "Quay lại Safari, bấm aA trên thanh địa chỉ → Cài đặt trang web → Vị trí → Cho phép.", "Bấm \"Thử lại GPS\"."]
+      : ["Bấm biểu tượng ổ khóa cạnh địa chỉ web → Vị trí → Cho phép.", "Bấm \"Thử lại GPS\"."] }),
+  off: () => ({ title: "Định vị của điện thoại đang tắt.",
+    steps: isAndroid ? ["Kéo thanh thông báo từ trên xuống.", "Bấm biểu tượng Vị trí để bật.", "Bấm \"Thử lại GPS\"."]
+      : ["Mở Cài đặt → Quyền riêng tư & Bảo mật → Dịch vụ định vị → bật.", "Bấm \"Thử lại GPS\"."] }),
+  prompt: () => ({ title: "Điện thoại đang chờ bạn cho phép dùng vị trí.",
+    steps: isAndroid ? ["Nhìn thanh địa chỉ web phía trên: có biểu tượng vị trí (hình ghim) bị gạch hoặc hộp hỏi nhỏ ở cuối màn hình.", "Bấm vào đó và chọn Cho phép (hoặc \"Khi dùng trang web\").", "Không thấy gì: bấm \"Thử lại GPS\" để hỏi lại."]
+      : ["Tìm hộp hỏi \"…muốn dùng vị trí hiện tại của bạn\" và bấm Cho phép.", "Không thấy hộp hỏi: bấm \"Thử lại GPS\"."] }),
+  weak: () => ({ title: "Đang tìm tín hiệu GPS lâu hơn bình thường.",
+    steps: ["Ra chỗ thoáng, tránh trong nhà hoặc dưới mái che.", "Đứng yên 10–20 giây cho máy bắt sóng.", (isAndroid ? "Kiểm tra Cài đặt → Vị trí → Độ chính xác vị trí của Google đang bật." : "Kiểm tra Vị trí chính xác đang bật cho Trang web Safari.")] }),
+  none: () => ({ title: "Trình duyệt này không hỗ trợ GPS.", steps: [isAndroid ? "Mở link bằng Chrome." : "Mở link bằng Safari."] }),
+};
+function renderGpsHelp() {
+  const box = $("gpsHelp");
+  if (gpsReason === null && gps === "wait" && Date.now() - gpsSince > 25000) gpsReason = "weak";
+  if (!gpsReason || gpsSkipped || gps === "on") { box.hidden = true; return; }
+  const h = GPS_HELP[gpsReason]();
+  $("gpsHelpTitle").textContent = h.title;
+  const ol = $("gpsHelpSteps"); ol.innerHTML = "";
+  h.steps.forEach((t) => { const li = document.createElement("li"); li.textContent = t; ol.appendChild(li); });
+  const btns = $("gpsHelpBtns");
+  btns.querySelectorAll(".x").forEach((b) => b.remove());
+  if (gpsReason === "inapp") {
+    $("gpsRetry").hidden = true;
+    const url = "https://bus.nomahubvn.com/dibo/";
+    if (isAndroid) { const a = document.createElement("a"); a.className = "btn primary x"; a.style.cssText = "text-decoration:none;display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--surface)"; a.textContent = "Mở bằng Chrome"; a.href = "intent://bus.nomahubvn.com/dibo/#Intent;scheme=https;package=com.android.chrome;end"; btns.prepend(a); }
+    const c = document.createElement("button"); c.type = "button"; c.className = "x"; c.textContent = "Chép link";
+    c.addEventListener("click", () => { const done = () => { c.textContent = "Đã chép: " + url; }; try { navigator.clipboard.writeText(url).then(done, () => { c.textContent = url; }); } catch (e) { c.textContent = url; } });
+    btns.prepend(c);
+  } else $("gpsRetry").hidden = gpsReason === "none";
+  box.hidden = false;
+}
+$("gpsRetry").addEventListener("click", () => { gpsSkipped = false; gpsLowAcc = false; startGps(true); renderRun(); });
+$("gpsSkip").addEventListener("click", () => { gpsSkipped = true; clearGpsWatch(); gps = "off"; $("gpsHelp").hidden = true; renderRun(); });
+$("gpsChip").addEventListener("click", () => { if (gps !== "on") { gpsSkipped = false; gpsLowAcc = false; startGps(true); renderRun(); } });
+function stopGps() { gpsGotFix = false; clearGpsWatch(); if (gps === "on" || gps === "wait") gps = "off"; gpsReason = null; gpsLowAcc = false; gpsSkipped = false; renderGpsHelp(); }
 // Quãng đường: GPS khi có, không thì từ số bước × sải chân; không có cả hai thì không hiện
 function liveDistance(steps) {
   if (gps === "on" && track.meters > 0) return { km: track.meters / 1000, src: "gps" };
@@ -919,7 +1014,7 @@ $("runBtn").addEventListener("click", async () => {
   if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); }
   else {
     const p = startSensor();
-    startGps();
+    if (!gpsSkipped) startGps();
     if (!run.acc) speak("Bắt đầu. Mục tiêu " + S._plan.steps + " bước, nhịp " + S._plan.cadence + " bước một phút");
     run.on = true; run.start = Date.now();
     $("finishCard").hidden = true; $("sosCard").hidden = true;
