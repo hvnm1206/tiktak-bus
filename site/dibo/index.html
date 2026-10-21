@@ -782,7 +782,7 @@ function renderRun() {
   $("sensorTxt").textContent = {
     off: "bước · bấm Bắt đầu để bật cảm biến",
     listening: "bước · đang bật cảm biến…",
-    on: run.on ? (sc.walking ? "bước · đang đếm" : "bước · đứng yên, chưa đếm") : "bước · đang tạm dừng",
+    on: run.on ? (sc.walking ? (useNative ? "bước · đang đếm (cả khi tắt màn hình)" : "bước · đang đếm") : "bước · đứng yên, chưa đếm") : "bước · đang tạm dừng",
     denied: "Không đếm được bước: chưa cho phép cảm biến chuyển động. " + (isAndroid ? "Bấm biểu tượng bên trái địa chỉ web → Quyền → Cảm biến chuyển động → Cho phép." : "Mở bằng Safari tại bus.nomahubvn.com/dibo và bấm Cho phép."),
     none: "Không đếm được bước: " + (inAppName ? "trình duyệt trong " + (inAppName === "app" ? "ứng dụng này" : inAppName) + " chặn cảm biến. Mở bằng " + (isAndroid ? "Chrome." : "Safari.") : "trình duyệt này không gửi dữ liệu cảm biến. Mở bằng " + (isAndroid ? "Chrome" : "Safari") + " tại bus.nomahubvn.com/dibo."),
   }[sensor];
@@ -792,7 +792,36 @@ function renderRun() {
   $("endBtn").disabled = !run.on && !run.acc;
 }
 // ---- Cảm biến đếm bước ----
-const sc = createStepCounter();
+// App Android (APK) có bộ đếm bước native chạy cả khi tắt màn hình: window.NativeSteps.
+// Có thì dùng native; không có (Chrome/Safari) thì dùng gia tốc kế như cũ.
+const NATIVE = window.NativeSteps || null;
+let useNative = false, nativeSeen = false, nSamples = [];
+const webSc = createStepCounter();
+function nCount() { try { return NATIVE.count() | 0; } catch (e) { return webSc.count; } }
+const sc = {
+  get count() { return useNative ? nCount() : webSc.count; },
+  get walking() {
+    if (!useNative) return webSc.walking;
+    const t = performance.now() / 1000; nSample(t);
+    const old = nSamples.find((x) => t - x.t <= 6);
+    return !!old && nSamples[nSamples.length - 1].n > old.n;
+  },
+  feed(t, x, y, z) { if (!useNative) webSc.feed(t, x, y, z); },
+  cadence(now) {
+    if (!useNative) return webSc.cadence(now);
+    nSample(now);
+    const a = nSamples[0], b = nSamples[nSamples.length - 1];
+    return b.t - a.t >= 8 ? Math.round((b.n - a.n) * 60 / (b.t - a.t)) : 0;
+  },
+  reset() { webSc.reset(); nSamples = []; if (NATIVE) try { NATIVE.reset(); } catch (e) {} },
+};
+function nSample(t) {
+  const last = nSamples[nSamples.length - 1];
+  if (!last || t - last.t >= 1) nSamples.push({ t, n: nCount() });
+  while (nSamples.length && t - nSamples[0].t > 20) nSamples.shift();
+}
+function nativeResume() { if (useNative) { nSamples = []; try { NATIVE.resume(); } catch (e) {} } }
+function nativePause() { if (useNative) try { NATIVE.pause(); } catch (e) {} }
 let sensor = "off", lastMotion = 0, wake = null;
 function onMotion(e) {
   const a = e.accelerationIncludingGravity;
@@ -803,6 +832,12 @@ function onMotion(e) {
 }
 async function startSensor() {
   if (sensor === "on" || sensor === "listening") return;
+  if (NATIVE) {
+    try {
+      if (NATIVE.available()) { useNative = true; sensor = "on"; return; }
+      if (NATIVE.hasSensor()) NATIVE.askPermission();   // chưa cho quyền Hoạt động thể chất: hỏi, lần này dùng gia tốc kế
+    } catch (e) {}
+  }
   if (typeof DeviceMotionEvent === "undefined") { sensor = "none"; return; }
   try {
     if (typeof DeviceMotionEvent.requestPermission === "function") {
@@ -828,7 +863,8 @@ document.addEventListener("visibilitychange", () => {
   keepAwake();
   if (hiddenAt && run.on) {
     const g = Date.now() - hiddenAt;
-    if (g >= 5000) {
+    if (g >= 5000 && useNative) { track.cut(); cutSegment(); nativeSeen = true; renderRun(); }
+    else if (g >= 5000) {
       gapMs += g; gapCount++;
       track.cut(); cutSegment();
       if (hideFix && gps === "on") {
@@ -880,7 +916,7 @@ function showGapNote() {
 const UA = navigator.userAgent || "";
 const isIOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const isAndroid = /Android/i.test(UA);
-const inAppName = /Zalo/i.test(UA) ? "Zalo" : /FBAN|FBAV|FB_IAB|FBIOS/.test(UA) ? "Facebook" : /Instagram/.test(UA) ? "Instagram" : /TikTok|musical_ly|BytedanceWebview/i.test(UA) ? "TikTok" : /Line\//.test(UA) ? "Line" : (isAndroid && /; wv\)/.test(UA)) ? "app" : null;
+const inAppName = /Zalo/i.test(UA) ? "Zalo" : /FBAN|FBAV|FB_IAB|FBIOS/.test(UA) ? "Facebook" : /Instagram/.test(UA) ? "Instagram" : /TikTok|musical_ly|BytedanceWebview/i.test(UA) ? "TikTok" : /Line\//.test(UA) ? "Line" : (isAndroid && /; wv\)/.test(UA) && !window.NativeSteps) ? "app" : null;
 let gpsSince = 0, gpsLowAcc = false, gpsSkipped = false, gpsReason = null, gpsCheckT = null, gpsGotFix = false;
 // 8 giây chưa có vị trí: hỏi trình duyệt xem quyền đang ở trạng thái nào để chỉ đúng chỗ
 async function checkGpsStuck() {
@@ -1048,14 +1084,16 @@ function showRouteMap(which, el, segments, gaps = []) {
 
 // ---- Giọng nói ----
 function speak(text) {
-  if (!coach.voice || !window.speechSynthesis) return;
+  if (!coach.voice) return;
+  if (window.NativeTTS && !window.speechSynthesis) { try { NativeTTS.speak(text); } catch (e) {} return; }
+  if (!window.speechSynthesis) return;
   try {
     const u = new SpeechSynthesisUtterance(text); u.lang = "vi-VN"; u.rate = 1;
     const v = speechSynthesis.getVoices().find((x) => x.lang && x.lang.toLowerCase().startsWith("vi")); if (v) u.voice = v;
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-function setVoice(on) { coach.voice = on; $("voiceOn").setAttribute("aria-pressed", on); $("voiceOff").setAttribute("aria-pressed", !on); if (!on) try { speechSynthesis.cancel(); } catch (e) {} }
+function setVoice(on) { coach.voice = on; $("voiceOn").setAttribute("aria-pressed", on); $("voiceOff").setAttribute("aria-pressed", !on); if (!on) try { window.NativeTTS && NativeTTS.stop(); speechSynthesis.cancel(); } catch (e) {} }
 $("voiceOn").addEventListener("click", () => { setVoice(true); speak("Đã bật đọc nhắc"); });
 $("voiceOff").addEventListener("click", () => setVoice(false));
 
@@ -1087,11 +1125,12 @@ function coachTick() {
 function sessionSteps() { return sensor === "on" ? sc.count : null; }
 
 $("runBtn").addEventListener("click", async () => {
-  if (run.on) { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); }
+  if (run.on) { run.acc = elapsed(); run.on = false; nativePause(); clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); }
   else {
     const p = startSensor();
     if (!gpsSkipped) startGps();
     if (!run.acc) speak("Bắt đầu. Mục tiêu " + S._plan.steps + " bước, nhịp " + S._plan.cadence + " bước một phút");
+    if (NATIVE) await p; nativeResume();
     run.on = true; run.start = Date.now();
     $("finishCard").hidden = true; $("sosCard").hidden = true;
     if (!run.audio) { try { run.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
@@ -1102,7 +1141,7 @@ $("runBtn").addEventListener("click", async () => {
   }
   renderRun();
 });
-function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); renderRun(); }
+function stopRun() { run.acc = elapsed(); run.on = false; nativePause(); clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); renderRun(); }
 $("endBtn").addEventListener("click", () => {
   stopRun();
   $("fSteps").value = totalStepsForForm();
@@ -1117,7 +1156,7 @@ function currentSummary() {
   // thời gian dùng để tính nhịp/tốc độ: bỏ các khoảng tắt màn hình KHÔNG ước tính được
   const measured = Math.max(1, (run.acc - (gapMs - est.ms)) / 1000);
   const meters = track.meters + est.meters;
-  const m = sessionSummary(S.profile, { steps, seconds: measured, meters: gps === "on" || meters > 0 ? meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
+  const m = sessionSummary(S.profile, { steps, seconds: measured, meters: !nativeSeen && (gps === "on" || meters > 0) ? meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
   m.estSteps = est.steps; m.estMeters = Math.round(est.meters);
   m.seconds = Math.round(run.acc / 1000); m.minutes = Math.round(run.acc / 60000); m.gapMin = Math.round(gapMs / 60000); m.gapSec = Math.round(gapMs / 1000);
   return m;
@@ -1172,7 +1211,7 @@ $("saveBtn").addEventListener("click", () => {
   if (ms) { S.strides = (S.strides || []).concat(ms).slice(-5); }
   save();
   run = { ...run, on: false, acc: 0 }; sc.reset(); track = createGpsTrack(); stopGps(); coach = freshCoach(coach.voice);
-  hiddenAt = null; gapMs = 0; gapCount = 0; lastFix = null; hideFix = null; pendingGap = null; clearTimeout(pendingT);
+  hiddenAt = null; gapMs = 0; gapCount = 0; nativeSeen = false; lastFix = null; hideFix = null; pendingGap = null; clearTimeout(pendingT);
   est = { steps: 0, meters: 0, ms: 0 }; gapLog = []; gapLines = []; showGapNote();
   segs = [[]]; if (liveMap) { liveMap.remove(); liveMap = null; $("liveMapWrap").hidden = true; $("liveLegend").hidden = true; } follow = true; $("followBtn").hidden = true;
   $("finishCard").hidden = true; $("sosCard").hidden = true;
