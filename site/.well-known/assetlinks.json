@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.nomahubvn.tiktak.dibo",
+    "sha256_cert_fingerprints": ["5A:D1:3F:D2:F1:95:D2:AB:FC:95:3B:0F:85:A0:94:CA:77:35:D0:86:F1:1E:26:3D:F5:C8:DE:7A:03:CE:C7:C8"]
+  }
+}]
