@@ -1,0 +1,6 @@
+release.jks
+release.jks.b64
+ks_pass.txt
+.tools/
+android/.gradle/
+android/app/build/

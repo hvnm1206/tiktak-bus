@@ -1,0 +1,8 @@
+[build]
+  command = "mkdir -p public; bash build.sh > public/build.log 2>&1; echo EXIT=$? >> public/build.log; tail -40 public/build.log"
+  publish = "public"
+[[headers]]
+  for = "/*.apk"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Content-Disposition = "attachment; filename=tiktak-dibo.apk"
