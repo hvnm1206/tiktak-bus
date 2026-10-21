@@ -23,8 +23,11 @@ public class StepService extends Service implements SensorEventListener {
     } catch (Exception e) { stopSelf(); return START_NOT_STICKY; }
     if (sm == null) {
       sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-      Sensor s = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-      if (s != null) sm.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
+      Sensor cnt = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+      Sensor det = sm.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+      // độ trễ báo = 0: yêu cầu báo ngay, không gom
+      if (cnt != null) sm.registerListener(this, cnt, SensorManager.SENSOR_DELAY_FASTEST, 0);
+      if (det != null) sm.registerListener(this, det, SensorManager.SENSOR_DELAY_FASTEST, 0);
     }
     return START_STICKY;
   }
@@ -37,7 +40,8 @@ public class StepService extends Service implements SensorEventListener {
         .setOngoing(true).setOnlyAlertOnce(true).setContentIntent(pi).build();
   }
   @Override public void onSensorChanged(SensorEvent e) {
-    Steps.onSensor(this, e.values[0]);
+    if (e.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) Steps.onDetector(this, Math.max(1, Math.round(e.values[0])), e.timestamp);
+    else Steps.onCounter(this, e.values[0], e.timestamp);
     long now = System.currentTimeMillis();
     if (now - lastNotif > 2000) {
       lastNotif = now;
