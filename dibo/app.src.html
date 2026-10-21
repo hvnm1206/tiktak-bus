@@ -371,11 +371,11 @@ function renderRun() {
   $("wTarget").textContent = p.minutes + " phút · " + fmt(p.steps) + " bước";
   $("timer").textContent = mmss(elapsed());
   const steps = sessionSteps(), cad = sensor === "on" ? sc.cadence(performance.now() / 1000) : 0;
-  $("liveSteps").textContent = steps === null ? "–" : fmt(steps);
+  $("liveSteps").textContent = steps === null ? (est.steps ? "~" + fmt(est.steps) : "–") : fmt(steps + est.steps);
   $("liveCad").textContent = cad || "–";
   const d = liveDistance(steps);
   $("liveKm").textContent = d.km === null ? "–" : d.km.toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  $("kmLbl").textContent = d.src === "gps" ? "km · GPS" : d.src === "buoc" ? "km · theo bước" : "km";
+  $("kmLbl").textContent = (d.src === "gps" ? "km · GPS" : d.src === "buoc" ? "km · theo bước" : "km") + (est.meters ? " + ước tính" : "");
   $("gpsChip").textContent = { off: "GPS chưa bật", wait: "Đang tìm GPS…", on: "GPS đang đo", denied: "GPS chưa chạy · bấm để thử lại", none: "Không có GPS" }[gps];
   if (gps === "wait" && !gpsReason && Date.now() - gpsSince > 25000) renderGpsHelp();
   const sp = liveSpeed(cad);
@@ -389,6 +389,7 @@ function renderRun() {
     denied: "Không đếm được bước: chưa cho phép cảm biến chuyển động. " + (isAndroid ? "Bấm biểu tượng bên trái địa chỉ web → Quyền → Cảm biến chuyển động → Cho phép." : "Mở bằng Safari tại bus.nomahubvn.com/dibo và bấm Cho phép."),
     none: "Không đếm được bước: " + (inAppName ? "trình duyệt trong " + (inAppName === "app" ? "ứng dụng này" : inAppName) + " chặn cảm biến. Mở bằng " + (isAndroid ? "Chrome." : "Safari.") : "trình duyệt này không gửi dữ liệu cảm biến. Mở bằng " + (isAndroid ? "Chrome" : "Safari") + " tại bus.nomahubvn.com/dibo."),
   }[sensor];
+  if (est.steps && steps !== null && sensor === "on") $("sensorTxt").textContent = "bước · gồm ~" + fmt(est.steps) + " bước ước tính lúc tắt màn hình";
   $("phase").textContent = currentCadence().label;
   $("runBtn").textContent = run.on ? "Tạm dừng" : (run.acc ? "Đi tiếp" : "Bắt đầu");
   $("endBtn").disabled = !run.on && !run.acc;
@@ -422,26 +423,59 @@ async function keepAwake() {
 // Màn hình tắt / chuyển app: trình duyệt dừng cảm biến và GPS. Ghi lại khoảng mất dữ liệu,
 // không nối đường GPS qua khoảng đó, và không tính khoảng đó vào nhịp/tốc độ trung bình.
 let hiddenAt = null, gapMs = 0, gapCount = 0;
+// Ước tính bù khoảng tắt màn hình: khoảng cách đường thẳng (GPS trước/sau) ÷ sải chân trung bình
+let lastFix = null, hideFix = null, pendingGap = null, pendingT = null;
+let est = { steps: 0, meters: 0, ms: 0 }, gapLog = [], gapLines = [];
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") { if (run.on) hiddenAt = Date.now(); return; }
+  if (document.visibilityState === "hidden") { if (run.on) { hiddenAt = Date.now(); hideFix = lastFix; } return; }
   keepAwake();
   if (hiddenAt && run.on) {
     const g = Date.now() - hiddenAt;
     if (g >= 5000) {
       gapMs += g; gapCount++;
       track.cut(); cutSegment();
+      if (hideFix && gps === "on") {
+        pendingGap = { from: hideFix, sec: g / 1000 };
+        clearTimeout(pendingT);
+        pendingT = setTimeout(() => { if (pendingGap) resolveGap(null); }, 60000);   // 60 giây không có GPS tốt: bỏ
+      } else {
+        gapLog.push({ sec: g / 1000, ok: false, reason: "khonggps" });
+        speak("Màn hình vừa tắt " + Math.max(1, Math.round(g / 60000)) + " phút. Không có GPS nên không ước tính được");
+      }
       showGapNote();
-      speak("Màn hình vừa tắt " + Math.max(1, Math.round(g / 60000)) + " phút, app không đo được trong lúc đó");
     }
   }
   hiddenAt = null;
 });
+const GAP_REASON = { nhanh: "di chuyển nhanh hơn đi bộ (có thể đang đi xe)", gan: "vị trí gần như không đổi (đứng yên hoặc đi vòng về chỗ cũ)",
+  saiso: "GPS chưa đủ chính xác", thieu: "không có vị trí GPS", khonggps: "không có GPS" };
+function resolveGap(to) {
+  const g = pendingGap; pendingGap = null; clearTimeout(pendingT);
+  if (!g) return;
+  const r = estimateGap(g.from, to, g.sec, stride());
+  gapLog.push({ sec: g.sec, ...r });
+  if (r.ok) {
+    est.steps += r.steps; est.meters += r.meters; est.ms += g.sec * 1000;
+    const line = [{ lat: g.from.lat, lon: g.from.lon }, { lat: to.lat, lon: to.lon }];
+    gapLines.push(line);
+    if (liveMap) L.polyline(line.map((p) => [p.lat, p.lon]), { color: cssVar("--sun"), weight: 5, dashArray: "4 10", opacity: 0.95 }).addTo(liveMap);
+    speak("Màn hình vừa tắt " + Math.max(1, Math.round(g.sec / 60)) + " phút. Ước tính thêm khoảng " + r.steps + " bước");
+  } else {
+    speak("Màn hình vừa tắt " + Math.max(1, Math.round(g.sec / 60)) + " phút. Không ước tính được vì " + (GAP_REASON[r.reason] || ""));
+  }
+  showGapNote(); renderRun();
+}
 function showGapNote() {
   const box = $("gapNote");
   if (!gapCount) { box.hidden = true; return; }
   const m = Math.round(gapMs / 60000), sec = Math.round(gapMs / 1000);
-  box.textContent = "Màn hình đã tắt " + gapCount + " lần, tổng " + (m >= 1 ? m + " phút" : sec + " giây") +
-    ". Trong lúc đó app không đếm được bước và quãng đường. Giữ màn hình sáng để đo đủ.";
+  let t = "Màn hình đã tắt " + gapCount + " lần, tổng " + (m >= 1 ? m + " phút" : sec + " giây") + ".";
+  if (est.steps) t += " Đã ước tính thêm khoảng " + fmt(est.steps) + " bước, " + fmt(est.meters) + " m (đường thẳng, là mức tối thiểu; đường thực tế thường dài hơn).";
+  const bad = gapLog.filter((x) => !x.ok);
+  if (bad.length) t += " " + bad.length + " lần không ước tính được: " + [...new Set(bad.map((x) => GAP_REASON[x.reason]))].join("; ") + ".";
+  if (pendingGap) t += " Đang chờ GPS để ước tính lần vừa rồi…";
+  t += " Giữ màn hình sáng để đo chính xác.";
+  box.textContent = t;
   box.hidden = false;
 }
 // ---- GPS ----
@@ -478,7 +512,10 @@ function startGps(force) {
     gpsWatch = navigator.geolocation.watchPosition((pos) => {
       gps = "on"; gpsGotFix = true; gpsReason = null; clearTimeout(gpsCheckT); renderGpsHelp();
       const la = pos.coords.latitude, lo = pos.coords.longitude;
-      const added = run.on ? track.add({ lat: la, lon: lo, acc: pos.coords.accuracy, t: Date.now() / 1000 }) : false;
+      const fix = { lat: la, lon: lo, acc: pos.coords.accuracy, t: Date.now() / 1000 };
+      if (run.on && pendingGap && fix.acc <= 25) resolveGap(fix);
+      if (run.on && fix.acc <= 25) lastFix = fix;
+      const added = run.on ? track.add(fix) : false;
       onGpsPoint(la, lo, added);
     }, (err) => {
       if (gpsGotFix && err.code !== 1) return;                                                   // đang đo mà mất sóng tạm thời: tiếp tục chờ
@@ -544,7 +581,7 @@ $("gpsChip").addEventListener("click", () => { if (gps !== "on") { gpsSkipped = 
 function stopGps() { gpsGotFix = false; clearGpsWatch(); if (gps === "on" || gps === "wait") gps = "off"; gpsReason = null; gpsLowAcc = false; gpsSkipped = false; renderGpsHelp(); }
 // Quãng đường: GPS khi có, không thì từ số bước × sải chân; không có cả hai thì không hiện
 function liveDistance(steps) {
-  if (gps === "on" && track.meters > 0) return { km: track.meters / 1000, src: "gps" };
+  if (gps === "on" && track.meters + est.meters > 0) return { km: (track.meters + est.meters) / 1000, src: "gps" };
   if (steps !== null) return { km: steps * stride() / 100000, src: "buoc" };
   return { km: null, src: null };
 }
@@ -595,7 +632,7 @@ function onGpsPoint(lat, lon, added) {
 }
 function cutSegment() { if (segs[segs.length - 1].length) segs.push([]); }
 let sumMap = null, histMap = null;
-function showRouteMap(which, el, segments) {
+function showRouteMap(which, el, segments, gaps = []) {
   if (!hasMap()) return false;
   const pts = segments.flat();
   if (pts.length < 2) { el.hidden = true; return false; }
@@ -604,6 +641,7 @@ function showRouteMap(which, el, segments) {
   if (!m) { m = makeMap(el); if (which === "sum") sumMap = m; else histMap = m; }
   m.eachLayer((l) => { if (!(l instanceof L.TileLayer)) m.removeLayer(l); });
   const line = L.polyline(segments.filter((g) => g.length > 1).map((g) => g.map((p) => [p.lat, p.lon])), { color: cssVar("--accent"), weight: 6 }).addTo(m);
+  (gaps || []).forEach((g) => L.polyline(g.map((p) => [p.lat, p.lon]), { color: cssVar("--sun"), weight: 5, dashArray: "4 10" }).addTo(m).bindTooltip("Ước tính lúc tắt màn hình"));
   L.circleMarker([pts[0].lat, pts[0].lon], { radius: 7, color: cssVar("--accent"), weight: 3, fillColor: "#fff", fillOpacity: 1 }).addTo(m).bindTooltip("Bắt đầu");
   const e = pts[pts.length - 1];
   L.circleMarker([e.lat, e.lon], { radius: 7, color: "#fff", weight: 2, fillColor: cssVar("--sun"), fillOpacity: 1 }).addTo(m).bindTooltip("Kết thúc");
@@ -670,7 +708,7 @@ $("runBtn").addEventListener("click", async () => {
 function stopRun() { run.acc = elapsed(); run.on = false; clearInterval(run.tick); clearTimeout(run.beat); track.cut(); cutSegment(); renderRun(); }
 $("endBtn").addEventListener("click", () => {
   stopRun();
-  $("fSteps").value = sessionSteps() ?? "";
+  $("fSteps").value = totalStepsForForm();
   $("finishCard").hidden = false;
   renderSummary();
   const sm = currentSummary();
@@ -679,8 +717,11 @@ $("endBtn").addEventListener("click", () => {
 $("fSteps").addEventListener("input", renderSummary);
 function currentSummary() {
   const steps = Math.max(0, +$("fSteps").value || 0);
-  const measured = Math.max(1, (run.acc - gapMs) / 1000);
-  const m = sessionSummary(S.profile, { steps, seconds: measured, meters: gps === "on" || track.meters > 0 ? track.meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
+  // thời gian dùng để tính nhịp/tốc độ: bỏ các khoảng tắt màn hình KHÔNG ước tính được
+  const measured = Math.max(1, (run.acc - (gapMs - est.ms)) / 1000);
+  const meters = track.meters + est.meters;
+  const m = sessionSummary(S.profile, { steps, seconds: measured, meters: gps === "on" || meters > 0 ? meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
+  m.estSteps = est.steps; m.estMeters = Math.round(est.meters);
   m.seconds = Math.round(run.acc / 1000); m.minutes = Math.round(run.acc / 60000); m.gapMin = Math.round(gapMs / 60000); m.gapSec = Math.round(gapMs / 1000);
   return m;
 }
@@ -691,13 +732,14 @@ function renderSummary() {
   const box = $("sumStats"); box.innerHTML = "";
   items.forEach(([v, l]) => { const d = document.createElement("div"); d.className = "stat"; const b = document.createElement("b"); b.textContent = v; const sp = document.createElement("span"); sp.textContent = l; d.append(b, sp); box.appendChild(d); });
   const notes = [];
-  if (m.gapSec >= 5) notes.push("Có " + (m.gapMin >= 1 ? m.gapMin + " phút" : m.gapSec + " giây") + " màn hình tắt không đo được; số bước và quãng đường chỉ tính phần đo được.");
+  if (m.gapSec >= 5) notes.push("Có " + (m.gapMin >= 1 ? m.gapMin + " phút" : m.gapSec + " giây") + " màn hình tắt" +
+    (m.estSteps ? "; trong đó ước tính ~" + fmt(m.estSteps) + " bước, " + fmt(m.estMeters) + " m theo đường thẳng (mức tối thiểu)." : "; không ước tính được, số bước chỉ tính phần đo được."));
   if (m.pctPlan !== null) notes.push("Đạt " + m.pctPlan + "% số bước gợi ý (" + fmt(S._plan.steps) + ").");
   if (m.avgCad) notes.push(cadenceAdvice(S._plan.cadence, m.avgCad) === "nhanh" ? "Nhịp trung bình thấp hơn mục tiêu " + S._plan.cadence + "." : cadenceAdvice(S._plan.cadence, m.avgCad) === "cham" ? "Nhịp trung bình cao hơn mục tiêu " + S._plan.cadence + "." : "Nhịp trung bình đúng mục tiêu.");
   if (m.kmSource !== "gps") notes.push("Không có GPS nên quãng đường tính từ số bước.");
   $("sumNote").textContent = notes.join(" ");
   const segments = segs.filter((g) => g.length);
-  if (showRouteMap("sum", $("sumMap"), segments)) $("sumRoute").setAttribute("hidden", ""); else drawRoute($("sumRoute"), segments.flat());
+  if (showRouteMap("sum", $("sumMap"), segments, gapLines)) $("sumRoute").setAttribute("hidden", ""); else drawRoute($("sumRoute"), segments.flat());
 }
 function drawRoute(svg, pts) {
   // SVG không có thuộc tính .hidden như HTML: phải đặt/bỏ attribute
@@ -713,7 +755,8 @@ function drawRoute(svg, pts) {
     '<circle cx="' + P[P.length - 1][0] + '" cy="' + P[P.length - 1][1] + '" r="7" fill="var(--sun)"></circle>';
   svg.removeAttribute("hidden");
 }
-$("sosBtn").addEventListener("click", () => { stopRun(); $("sosCard").hidden = false; $("finishCard").hidden = !run.acc; if (run.acc) $("fSteps").value = sessionSteps() ?? ""; });
+$("sosBtn").addEventListener("click", () => { stopRun(); $("sosCard").hidden = false; $("finishCard").hidden = !run.acc; if (run.acc) $("fSteps").value = totalStepsForForm(); });
+function totalStepsForForm() { const s = sessionSteps(); return s === null ? (est.steps || "") : s + est.steps; }
 function setMetro(on) { run.metro = on; $("metroOn").setAttribute("aria-pressed", on); $("metroOff").setAttribute("aria-pressed", !on); }
 $("metroOn").addEventListener("click", () => { setMetro(true); if (!run.audio) { try { run.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } });
 $("metroOff").addEventListener("click", () => setMetro(false));
@@ -725,13 +768,15 @@ $("saveBtn").addEventListener("click", () => {
   const m = currentSummary();
   const all = segs.reduce((a, g) => a + g.length, 0), stepN = Math.max(1, Math.ceil(all / 300));
   const route = segs.filter((g) => g.length > 1).map((g) => g.filter((_, i) => i % stepN === 0 || i === g.length - 1).map((p) => ({ lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5) })));
-  S.sessions.push({ date: dkey(today()), steps: m.steps, minutes: Math.max(1, m.minutes), seconds: m.seconds, km: m.km, kmSource: m.kmSource,
+  S.sessions.push({ date: dkey(today()), steps: m.steps, estSteps: m.estSteps || 0, estMeters: m.estMeters || 0, gaps: gapLines.map((g) => g.map((p) => ({ lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5) }))),
+    minutes: Math.max(1, m.minutes), seconds: m.seconds, km: m.km, kmSource: m.kmSource,
     avgCad: m.avgCad, kcal: m.kcal, feeling: feel, type: S._plan.type, route });
-  const ms = measuredStride(m.kmSource === "gps" ? track.meters : 0, m.steps);
+  const ms = m.estSteps ? null : measuredStride(m.kmSource === "gps" ? track.meters : 0, m.steps);
   if (ms) { S.strides = (S.strides || []).concat(ms).slice(-5); }
   save();
   run = { ...run, on: false, acc: 0 }; sc.reset(); track = createGpsTrack(); stopGps(); coach = freshCoach(coach.voice);
-  hiddenAt = null; gapMs = 0; gapCount = 0; showGapNote();
+  hiddenAt = null; gapMs = 0; gapCount = 0; lastFix = null; hideFix = null; pendingGap = null; clearTimeout(pendingT);
+  est = { steps: 0, meters: 0, ms: 0 }; gapLog = []; gapLines = []; showGapNote();
   segs = [[]]; if (liveMap) { liveMap.remove(); liveMap = null; $("liveMapWrap").hidden = true; $("liveLegend").hidden = true; } follow = true; $("followBtn").hidden = true;
   $("finishCard").hidden = true; $("sosCard").hidden = true;
   show("homnay");
@@ -777,7 +822,7 @@ function renderWeek() {
   S.sessions.slice().reverse().slice(0, 14).forEach((s) => {
     const row = document.createElement("div");
     const a = document.createElement("span"); a.textContent = new Date(s.date + "T12:00:00").toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "numeric" }) + " · " + WALK_TYPES[s.type].name;
-    const b = document.createElement("span"); b.className = "num"; b.textContent = fmt(s.steps) + " bước" + (s.km != null ? " · " + s.km.toLocaleString("vi-VN") + " km" : "") + " · " + s.minutes + "′" + (s.kcal ? " · " + s.kcal + " kcal" : "") + " · " + feelTxt[s.feeling];
+    const b = document.createElement("span"); b.className = "num"; b.textContent = fmt(s.steps) + " bước" + (s.estSteps ? " (gồm ~" + fmt(s.estSteps) + " ước tính)" : "") + (s.km != null ? " · " + s.km.toLocaleString("vi-VN") + " km" : "") + " · " + s.minutes + "′" + (s.kcal ? " · " + s.kcal + " kcal" : "") + " · " + feelTxt[s.feeling];
     const info = document.createElement("div"); info.style.cssText = "display:flex;flex-direction:column;gap:2px;min-width:0;align-items:flex-start";
     b.style.fontSize = "13px"; b.style.color = "var(--muted)"; info.append(a, b); row.append(info);
     const segsR = routeSegments(s.route);
@@ -787,7 +832,7 @@ function renderWeek() {
         $("histMapCard").hidden = false;
         $("histMapTitle").textContent = "Lộ trình " + a.textContent;
         $("histMapInfo").textContent = b.textContent;
-        showRouteMap("hist", $("histMap"), segsR);
+        showRouteMap("hist", $("histMap"), segsR, s.gaps);
         $("histMapCard").scrollIntoView({ behavior: "smooth", block: "start" });
       });
       row.append(btn);

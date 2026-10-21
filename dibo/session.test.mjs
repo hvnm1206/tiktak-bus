@@ -57,3 +57,16 @@ test("GPS: tạm dừng rồi đi tiếp không cộng đoạn đi lúc dừng",
   // mỗi đoạn 14 m; bộ lọc 3 m làm hụt phần lẻ cuối đoạn → 25–28 m, không phải ~500 m
   assert.ok(g.meters >= 25 && g.meters <= 28, g.meters);
 });
+
+test("Ước tính khoảng tắt màn hình: 300 m / 5 phút, sải 70 cm ≈ 429 bước", () => {
+  const a = { lat: 21, lon: 105.8, acc: 8 }, b = { lat: 21 + north(300), lon: 105.8, acc: 10 };
+  const r = E.estimateGap(a, b, 300, 70);
+  assert.equal(r.ok, true); assert.ok(Math.abs(r.meters - 300) < 1); assert.equal(r.steps, 429);
+});
+test("Ước tính: bỏ qua khi đi xe, khi gần chỗ cũ, khi GPS kém, khi thiếu điểm", () => {
+  const a = { lat: 21, lon: 105.8, acc: 8 };
+  assert.equal(E.estimateGap(a, { lat: 21 + north(3000), lon: 105.8, acc: 8 }, 300, 70).reason, "nhanh"); // 10 m/s
+  assert.equal(E.estimateGap(a, { lat: 21 + north(10), lon: 105.8, acc: 8 }, 300, 70).reason, "gan");
+  assert.equal(E.estimateGap(a, { lat: 21 + north(300), lon: 105.8, acc: 60 }, 300, 70).reason, "saiso");
+  assert.equal(E.estimateGap(null, a, 300, 70).reason, "thieu");
+});

@@ -331,3 +331,16 @@ export function effectiveStride(p, measured = []) {
   const m = measured.slice(-5);
   return m.length ? m.reduce((a, b) => a + b, 0) / m.length : strideCm(p.height, p.sex);
 }
+
+// ---- 8. Ước tính khoảng màn hình tắt ----
+// Khoảng cách đường thẳng giữa điểm GPS cuối trước khi tắt và điểm đầu sau khi bật,
+// chia cho sải chân trung bình. Là ước tính TỐI THIỂU (đường đi vòng sẽ dài hơn).
+// Bỏ qua nếu: thiếu điểm, sai số GPS > 25 m, đi dưới 20 m, hoặc nhanh hơn đi bộ (> 2,5 m/s ≈ 9 km/h).
+export function estimateGap(from, to, gapSec, strideCmVal, { maxAcc = 25, minMeters = 20, maxSpeed = 2.5 } = {}) {
+  if (!from || !to || !(gapSec > 0) || !(strideCmVal > 0)) return { ok: false, reason: "thieu", meters: 0, steps: 0 };
+  if ((from.acc ?? 0) > maxAcc || (to.acc ?? 0) > maxAcc) return { ok: false, reason: "saiso", meters: 0, steps: 0 };
+  const m = haversine(from, to);
+  if (m < minMeters) return { ok: false, reason: "gan", meters: 0, steps: 0 };
+  if (m / gapSec > maxSpeed) return { ok: false, reason: "nhanh", meters: 0, steps: 0, speed: (m / gapSec) * 3.6 };
+  return { ok: true, reason: null, meters: m, steps: Math.round((m * 100) / strideCmVal) };
+}
