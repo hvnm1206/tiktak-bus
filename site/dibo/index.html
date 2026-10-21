@@ -155,6 +155,7 @@ nav button[aria-current="page"]{color:var(--accent)}
         <div class="stat"><b id="liveKm">0</b><span id="kmLbl">km</span></div>
       </div>
       <div class="chips"><button class="chip" id="gpsChip" type="button" style="border:0;min-height:30px;cursor:pointer">GPS chưa bật</button><span class="chip sun" id="speedChip" hidden></span><span class="chip warn" id="adviceChip" hidden></span></div>
+      <div class="gps-help" id="gapNote" hidden style="background:var(--warn-soft)"></div>
       <div class="gps-help" id="gpsHelp" hidden>
         <b id="gpsHelpTitle"></b>
         <ol id="gpsHelpSteps"></ol>
@@ -203,7 +204,7 @@ nav button[aria-current="page"]{color:var(--accent)}
         </div></div>
       <button class="primary" id="saveBtn">Lưu buổi đi</button>
     </div>
-    <div class="legal">Số bước đếm bằng cảm biến chuyển động; quãng đường đo bằng GPS (không có GPS thì tính từ số bước và sải chân). Giữ màn hình sáng khi đi (app tự giữ); khóa màn hình thì điện thoại ngừng đếm.</div>
+    <div class="legal"><b>Không bấm nút nguồn khi đang đi.</b> Bản web chỉ đo được khi màn hình sáng; app tự giữ màn hình không tắt. Khóa máy thì trình duyệt dừng đếm bước và GPS cho đến khi bật lại.</div>
   </section>
 
   <!-- TUẦN -->
@@ -802,7 +803,31 @@ async function startSensor() {
 async function keepAwake() {
   try { if (navigator.wakeLock && run.on) wake = await navigator.wakeLock.request("screen"); } catch (e) {}
 }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
+// Màn hình tắt / chuyển app: trình duyệt dừng cảm biến và GPS. Ghi lại khoảng mất dữ liệu,
+// không nối đường GPS qua khoảng đó, và không tính khoảng đó vào nhịp/tốc độ trung bình.
+let hiddenAt = null, gapMs = 0, gapCount = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") { if (run.on) hiddenAt = Date.now(); return; }
+  keepAwake();
+  if (hiddenAt && run.on) {
+    const g = Date.now() - hiddenAt;
+    if (g >= 5000) {
+      gapMs += g; gapCount++;
+      track.cut(); cutSegment();
+      showGapNote();
+      speak("Màn hình vừa tắt " + Math.max(1, Math.round(g / 60000)) + " phút, app không đo được trong lúc đó");
+    }
+  }
+  hiddenAt = null;
+});
+function showGapNote() {
+  const box = $("gapNote");
+  if (!gapCount) { box.hidden = true; return; }
+  const m = Math.round(gapMs / 60000), sec = Math.round(gapMs / 1000);
+  box.textContent = "Màn hình đã tắt " + gapCount + " lần, tổng " + (m >= 1 ? m + " phút" : sec + " giây") +
+    ". Trong lúc đó app không đếm được bước và quãng đường. Giữ màn hình sáng để đo đủ.";
+  box.hidden = false;
+}
 // ---- GPS ----
 // ---- Nhận biết máy và trình duyệt để hướng dẫn đúng ----
 const UA = navigator.userAgent || "";
@@ -1038,7 +1063,10 @@ $("endBtn").addEventListener("click", () => {
 $("fSteps").addEventListener("input", renderSummary);
 function currentSummary() {
   const steps = Math.max(0, +$("fSteps").value || 0);
-  return sessionSummary(S.profile, { steps, seconds: run.acc / 1000, meters: gps === "on" || track.meters > 0 ? track.meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
+  const measured = Math.max(1, (run.acc - gapMs) / 1000);
+  const m = sessionSummary(S.profile, { steps, seconds: measured, meters: gps === "on" || track.meters > 0 ? track.meters : null, strideCmVal: stride(), plannedSteps: S._plan.steps });
+  m.seconds = Math.round(run.acc / 1000); m.minutes = Math.round(run.acc / 60000); m.gapMin = Math.round(gapMs / 60000); m.gapSec = Math.round(gapMs / 1000);
+  return m;
 }
 function renderSummary() {
   const m = currentSummary();
@@ -1047,6 +1075,7 @@ function renderSummary() {
   const box = $("sumStats"); box.innerHTML = "";
   items.forEach(([v, l]) => { const d = document.createElement("div"); d.className = "stat"; const b = document.createElement("b"); b.textContent = v; const sp = document.createElement("span"); sp.textContent = l; d.append(b, sp); box.appendChild(d); });
   const notes = [];
+  if (m.gapSec >= 5) notes.push("Có " + (m.gapMin >= 1 ? m.gapMin + " phút" : m.gapSec + " giây") + " màn hình tắt không đo được; số bước và quãng đường chỉ tính phần đo được.");
   if (m.pctPlan !== null) notes.push("Đạt " + m.pctPlan + "% số bước gợi ý (" + fmt(S._plan.steps) + ").");
   if (m.avgCad) notes.push(cadenceAdvice(S._plan.cadence, m.avgCad) === "nhanh" ? "Nhịp trung bình thấp hơn mục tiêu " + S._plan.cadence + "." : cadenceAdvice(S._plan.cadence, m.avgCad) === "cham" ? "Nhịp trung bình cao hơn mục tiêu " + S._plan.cadence + "." : "Nhịp trung bình đúng mục tiêu.");
   if (m.kmSource !== "gps") notes.push("Không có GPS nên quãng đường tính từ số bước.");
@@ -1086,6 +1115,7 @@ $("saveBtn").addEventListener("click", () => {
   if (ms) { S.strides = (S.strides || []).concat(ms).slice(-5); }
   save();
   run = { ...run, on: false, acc: 0 }; sc.reset(); track = createGpsTrack(); stopGps(); coach = freshCoach(coach.voice);
+  hiddenAt = null; gapMs = 0; gapCount = 0; showGapNote();
   segs = [[]]; if (liveMap) { liveMap.remove(); liveMap = null; $("liveMapWrap").hidden = true; $("liveLegend").hidden = true; } follow = true; $("followBtn").hidden = true;
   $("finishCard").hidden = true; $("sosCard").hidden = true;
   show("homnay");
