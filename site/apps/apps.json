@@ -7,6 +7,9 @@
     { "name": "TikTak Taxi", "desc": "Gọi taxi một chạm", "url": "https://tiktak-taxi.netlify.app/", "netlify": "tiktak-taxi", "icon": "car", "color": "amber", "tag": "beta" },
     { "name": "CMT", "desc": "Kho trải nghiệm tốt: hỏi và mách nhau", "url": "https://nmh-cmt.netlify.app/", "netlify": "nmh-cmt", "icon": "star", "color": "amber", "tag": "beta" },
     { "name": "NMH Xử lý vấn đề", "desc": "Giải quyết vấn đề theo từng bước", "url": "https://nmh-xu-ly-van-de.netlify.app/", "netlify": "nmh-xu-ly-van-de", "icon": "tool", "color": "violet", "tag": "beta" },
-    { "name": "Mendo Chi phí", "desc": "Quản lý chi phí (bản thử)", "url": "https://mendo-chi-phi-test.netlify.app/", "netlify": "mendo-chi-phi-test", "icon": "coin", "color": "violet", "tag": "test" }
+    { "name": "Mendo Chi phí", "desc": "Quản lý chi phí (bản thử)", "url": "https://mendo-chi-phi-test.netlify.app/", "netlify": "mendo-chi-phi-test", "icon": "coin", "color": "violet", "tag": "test" },
+    { "name": "CT3A của tôi", "desc": "Kênh liên lạc cư dân, Ban quản lý và bảo vệ tòa CT3A", "url": "https://ct3a-cua-toi.netlify.app/", "netlify": "ct3a-cua-toi", "icon": "app", "color": "blue", "tag": "beta" },
+    { "name": "Nghe Tiếng Anh NMH", "desc": "Viết dàn ý tiếng Việt, AI phát triển thành bài, dịch và đọc tiếng Anh", "url": "https://nmh-nghe-tieng-anh.netlify.app/", "netlify": "nmh-nghe-tieng-anh", "icon": "star", "color": "green", "tag": "beta" },
+    { "name": "Ngáo", "desc": "Trợ lý AI trò chuyện bằng giọng nói, nhiều tính cách", "url": "https://ngao-nmh.netlify.app/", "netlify": "ngao-nmh", "icon": "app", "color": "violet", "tag": "beta" }
   ]
 }
