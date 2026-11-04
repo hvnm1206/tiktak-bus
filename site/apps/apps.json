@@ -4,6 +4,7 @@
     { "name": "Tiktak Bus", "desc": "Tìm đường xe buýt Hà Nội, nhắc xuống xe", "url": "https://bus.nomahubvn.com/", "netlify": "tiktak-bus", "icon": "bus", "color": "blue", "tag": "live" },
     { "name": "TikTak Đi Bộ", "desc": "Đi bộ thể thao, đếm bước, theo thể trạng", "url": "https://bus.nomahubvn.com/dibo/", "icon": "walk", "color": "green", "tag": "beta" },
     { "name": "TikTak Đi Bộ cho Android", "desc": "Tải app Android, đếm bước cả khi tắt màn hình", "url": "https://tiktak-dibo.netlify.app/", "netlify": "tiktak-dibo", "icon": "walk", "color": "green", "tag": "beta" },
+    { "name": "Thời khoá biểu", "desc": "Lịch học, học thêm, bài tập; bố mẹ xem cùng con và gửi lời nhắc", "url": "https://nmh-tkb.netlify.app/", "netlify": "nmh-tkb", "icon": "app", "color": "violet", "tag": "beta" },
     { "name": "TikTak Taxi", "desc": "Gọi taxi một chạm", "url": "https://tiktak-taxi.netlify.app/", "netlify": "tiktak-taxi", "icon": "car", "color": "amber", "tag": "beta" },
     { "name": "CMT", "desc": "Kho trải nghiệm tốt: hỏi và mách nhau", "url": "https://nmh-cmt.netlify.app/", "netlify": "nmh-cmt", "icon": "star", "color": "amber", "tag": "beta" },
     { "name": "NMH Xử lý vấn đề", "desc": "Giải quyết vấn đề theo từng bước", "url": "https://nmh-xu-ly-van-de.netlify.app/", "netlify": "nmh-xu-ly-van-de", "icon": "tool", "color": "violet", "tag": "beta" },

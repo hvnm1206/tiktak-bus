@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thời khoá biểu</title>
+<meta name="description" content="Thời khoá biểu, học thêm, bài tập cho học sinh và phụ huynh">
+<meta name="theme-color" content="#4B34C4">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Thời khoá biểu">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8FC; --sheet:#FFFFFF; --rule:#E3E7F4; --margin:#F0A3B5;
+  --ink:#1E1B3A; --soft:#67648A; --faint:#9A98B5;
+  --tim:#4B34C4; --tim-2:#EEEBFF; --red:#D02E5E; --red-2:#FDEAF0; --green:#227A66; --green-2:#E3F4EF;
+  --r:14px; --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 "Be Vietnam Pro",system-ui,-apple-system,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #8C7BFF;outline-offset:2px}
+.hide{display:none!important}
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 16px calc(88px + var(--safe-b))}
+
+/* Đầu trang */
+.top{display:flex;align-items:center;gap:10px;padding:18px 0 10px}
+.top h1{font-size:15px;font-weight:600;color:var(--soft);margin:0;flex:1}
+.sync{width:9px;height:9px;border-radius:50%;background:#C9C7DA}
+.sync.ok{background:#36B37E}.sync.busy{background:#F2B035}.sync.off{background:#C9C7DA}
+.kids{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.kid{border:1.5px solid var(--rule);background:var(--sheet);border-radius:999px;padding:7px 14px;font-weight:600;white-space:nowrap}
+.kid.on{border-color:var(--tim);background:var(--tim);color:#fff}
+.kid.wait{color:var(--soft);border-style:dashed}
+
+/* Trang vở */
+.sheet{position:relative;background:var(--sheet);border-radius:var(--r);padding:18px 18px 18px 30px;margin:10px 0;
+  background-image:linear-gradient(to right,transparent 18px,var(--margin) 18px,var(--margin) 19.5px,transparent 19.5px);
+  box-shadow:0 1px 0 var(--rule),0 0 0 1px var(--rule) inset}
+.dayhead{display:flex;align-items:baseline;gap:10px;margin:2px 0 14px}
+.dayhead .big{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.05;color:var(--tim)}
+.dayhead .date{color:var(--soft);font-weight:500}
+.seg{display:inline-flex;background:var(--tim-2);border-radius:999px;padding:3px;margin-bottom:6px}
+.seg button{border:0;background:none;border-radius:999px;padding:6px 14px;font-weight:600;color:var(--tim)}
+.seg button.on{background:var(--tim);color:#fff}
+h2{font-size:13px;font-weight:700;color:var(--soft);margin:18px 0 6px}
+.lesson{display:flex;align-items:center;gap:12px;min-height:44px;border-bottom:1px solid var(--rule)}
+.lesson .n{width:22px;text-align:right;color:var(--faint);font-weight:600;font-variant-numeric:tabular-nums}
+.lesson .s{flex:1;font-weight:600;font-size:17px}
+.lesson button{border:0;background:none;color:var(--soft);padding:10px 6px}
+.empty{color:var(--soft);padding:10px 0}
+.extra{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.extra .t{min-width:58px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;line-height:1.25}
+.extra .t small{display:block;font-weight:500;color:var(--soft)}
+.extra .b{flex:1}.extra .b b{display:block}.extra .b span{color:var(--soft);font-size:14px}
+.extra.soon{background:var(--green-2);margin:0 -10px;padding:10px;border-radius:10px;border:0}
+
+/* Việc học */
+.task{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--rule)}
+.task input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--tim);flex:none}
+.task .c{flex:1;min-width:0}
+.task .c p{margin:0;font-weight:500;overflow-wrap:anywhere}
+.task.done .c p{text-decoration:line-through;color:var(--faint)}
+.task .m{font-size:13px;color:var(--soft);margin-top:2px}
+.kind{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;margin-right:6px}
+.k-test{background:var(--red-2);color:var(--red)}.k-homework{background:var(--tim-2);color:var(--tim)}
+.k-prepare{background:#FFF3DA;color:#8A5A00}.k-reminder{background:var(--green-2);color:var(--green)}.k-other{background:#EEF0F6;color:var(--soft)}
+.task .edit{border:0;background:none;color:var(--soft);padding:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
+.chip{border:1.5px solid var(--rule);background:var(--sheet);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;color:var(--soft)}
+.chip.on{border-color:var(--tim);color:var(--tim);background:var(--tim-2)}
+
+/* Nút */
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font-weight:700;background:var(--tim);color:#fff;font-size:16px}
+.btn.ghost{background:var(--tim-2);color:var(--tim)}
+.btn.line{background:none;border:1.5px solid var(--rule);color:var(--ink)}
+.btn.danger{background:var(--red-2);color:var(--red)}
+.btn:disabled{opacity:.55}
+.add{border:0;background:none;color:var(--tim);font-weight:700;padding:12px 0;display:block}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.notice{border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--tim-2)}
+.notice.red{background:var(--red-2)}
+.notice p{margin:0 0 10px}
+.notice .row button{padding:10px}
+
+/* Thanh dưới */
+.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--rule);
+  display:flex;justify-content:center;padding:6px 8px calc(6px + var(--safe-b));z-index:5}
+.nav div{display:flex;width:100%;max-width:560px}
+.nav button{flex:1;border:0;background:none;padding:6px 0;color:var(--faint);font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav button svg{width:24px;height:24px}
+.nav button.on{color:var(--tim)}
+.badge{position:relative}.badge[data-n]:after{content:attr(data-n);position:absolute;top:-4px;right:-10px;background:var(--red);color:#fff;border-radius:999px;font-size:11px;padding:0 5px;line-height:16px}
+
+/* Tuần */
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:4px 0 10px}
+.days button{border:0;background:var(--sheet);border-radius:10px;padding:8px 0;font-weight:700;color:var(--soft);box-shadow:0 0 0 1px var(--rule) inset}
+.days button small{display:block;font-weight:500;font-size:11px}
+.days button.on{background:var(--tim);color:#fff;box-shadow:none}
+.days button.today:not(.on){color:var(--tim)}
+
+/* Hộp nhập */
+.sheetbg{position:fixed;inset:0;background:rgba(30,27,58,.35);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--sheet);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + var(--safe-b));max-height:92vh;overflow:auto;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.6}}
+@media (prefers-reduced-motion:reduce){.modal{animation:none}}
+.modal h3{margin:0 0 14px;font-size:19px}
+label.f{display:block;font-size:14px;font-weight:600;color:var(--soft);margin:12px 0 5px}
+.in{width:100%;border:1.5px solid var(--rule);border-radius:12px;padding:12px;background:#fff;font-size:16px}
+.in:focus{border-color:var(--tim);outline:none}
+.err{color:var(--red);font-size:14px;min-height:20px;margin:6px 0}
+.code{font-size:30px;font-weight:800;letter-spacing:.12em;color:var(--tim);font-variant-numeric:tabular-nums}
+.small{font-size:14px;color:var(--soft)}
+.list-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.list-item b{flex:1}
+.list-item button{border:0;background:var(--red-2);color:var(--red);border-radius:10px;padding:8px 12px;font-weight:600}
+
+/* Chào mừng */
+.welcome{padding-top:8vh}
+.welcome .mark{width:64px;height:64px;border-radius:18px;background:var(--tim);display:grid;place-items:center;margin-bottom:18px}
+.welcome h1{font-size:32px;line-height:1.1;letter-spacing:-.02em;margin:0 0 8px}
+.welcome p{color:var(--soft);margin:0 0 26px}
+.welcome .btn{margin-bottom:10px}
+.toast{position:fixed;left:50%;bottom:calc(92px + var(--safe-b));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:90vw}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<nav class="nav hide" id="nav"><div>
+  <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Ngày mai</button>
+  <button data-tab="week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Cả tuần</button>
+  <button data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Việc học</button>
+  <button data-tab="more"><span class="badge" id="moreBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><span id="moreLabel">Cá nhân</span></button>
+</div></nav>
+<div id="modalRoot"></div>
+<script>
+'use strict';
+const API = '/api';
+const DAYS = ['Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy','Chủ Nhật'];
+const SHORT = ['T2','T3','T4','T5','T6','T7','CN'];
+const KIND = {homework:'Bài tập',test:'Kiểm tra',prepare:'Chuẩn bị',reminder:'Lời nhắc',other:'Việc khác'};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+const rnd = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b => b.toString(16).padStart(2,'0')).join('');
+
+// ---------- Ngày giờ (giờ máy) ----------
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+const addDays = (n, base = new Date()) => { const d = new Date(base); d.setDate(d.getDate()+n); return d; };
+const wd = d => (d.getDay()+6)%7;
+const dmy = s => { const [y,m,d] = s.split('-'); return +d + '/' + +m; };
+function dayWord(s){ const t = ymd(new Date()); if (s===t) return 'Hôm nay'; if (s===ymd(addDays(1))) return 'Ngày mai'; if (s===ymd(addDays(-1))) return 'Hôm qua'; return DAYS[wd(new Date(s+'T12:00'))] + ' ' + dmy(s); }
+
+// ---------- Lưu trên máy ----------
+const LS = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+let S = LS.get('tkb2', null); // { role, token, label, student:{code,recovery,data,queue}, kids:[{code,token?,status,data}], sel }
+const save = () => LS.set('tkb2', S);
+const ui = { tab: 'home', homeDay: 1, weekDay: wd(addDays(1)), filter: 'open', sync: 'off' };
+
+// ---------- Gọi máy chủ ----------
+async function call(method, path, body, token){
+  const r = await fetch(API + path, { method, headers: { 'content-type': 'application/json', ...(token ? { 'x-token': token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok) { const e = new Error(j.error || 'Không kết nối được'); e.status = r.status; e.body = j; throw e; }
+  return j;
+}
+function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+
+// ---------- Dữ liệu đang xem ----------
+const isStudent = () => S?.role === 'student';
+function cur(){ // { code, data, token, canEdit }
+  if (isStudent()) return { code: S.student.code, data: S.student.data, token: S.token, canEdit: true };
+  const k = (S?.kids || []).find(k => k.code === S.sel && k.status === 'approved') || (S?.kids || []).find(k => k.status === 'approved');
+  return k ? { code: k.code, data: k.data, token: k.token || S.token, canEdit: false, kid: k } : null;
+}
+
+// Áp thao tác lên bản trên máy (giống máy chủ) để màn hình đổi ngay, kể cả khi mất mạng.
+function applyLocal(d, op){
+  switch (op.t) {
+    case 'profile': d.name = op.name; d.className = op.className; break;
+    case 'lessons.set': d.lessons[op.w] = op.list.filter(Boolean); break;
+    case 'extra.upsert': { if (Number.isInteger(op.from) && op.from !== op.w) d.extras[op.from] = d.extras[op.from].filter(e => e.id !== op.item.id);
+      const day = d.extras[op.w], i = day.findIndex(e => e.id === op.item.id); if (i >= 0) day[i] = op.item; else day.push(op.item);
+      day.sort((a,b) => (a.start||'99').localeCompare(b.start||'99')); break; }
+    case 'extra.del': d.extras[op.w] = d.extras[op.w].filter(e => e.id !== op.id); break;
+    case 'task.upsert': { const i = d.tasks.findIndex(t => t.id === op.task.id); const old = d.tasks[i];
+      const t = { ...op.task, kind: old?.kind === 'reminder' ? 'reminder' : op.task.kind, from: old?.from };
+      if (i >= 0) d.tasks[i] = t; else d.tasks.push(t); break; }
+    case 'task.done': { const t = d.tasks.find(t => t.id === op.id); if (t) t.done = op.done; break; }
+    case 'task.del': d.tasks = d.tasks.filter(t => t.id !== op.id); break;
+    case 'reminder.add': d.tasks.push({ id: op.id, kind: 'reminder', content: op.content, day: op.day, done: false, from: S.label || 'Phụ huynh' }); break;
+    case 'link.approve': { const l = (d.links||[]).find(l => l.id === op.id); if (l) l.status = 'approved'; break; }
+    case 'link.remove': d.links = (d.links||[]).filter(l => l.id !== op.id); break;
+  }
+}
+function queueOf(){ if (isStudent()) return S.student.queue ||= []; const c = cur(); return c ? (c.kid.queue ||= []) : []; }
+function act(op){
+  const c = cur(); if (!c) return;
+  op.opId = uid(); applyLocal(c.data, op); queueOf().push(op); save(); render(); flush();
+}
+
+// ---------- Đồng bộ ----------
+let flushing = false, pollAbort = null, pollTimer = null;
+function setSync(s){ ui.sync = s; const el = $('#sync'); if (el) el.className = 'sync ' + s; }
+async function flush(){
+  if (flushing) return; const c = cur(); if (!c) return;
+  const q = queueOf(); if (!q.length) return;
+  flushing = true; setSync('busy');
+  const batch = q.slice(0, 100);
+  try {
+    const r = await call('POST', `/s/${c.code}/ops`, { ops: batch }, c.token);
+    q.splice(0, batch.length);
+    // Thao tác chưa gửi vẫn áp lên dữ liệu mới nhận
+    const d = r.data; q.forEach(op => applyLocal(d, op)); setData(c, d);
+    setSync('ok');
+  } catch (e) {
+    if (e.status && e.status < 500 && e.status !== 409 && e.status !== 429) { q.splice(0, batch.length); toast(e.message); handleAuth(e, c); refresh(true); }
+    setSync('off');
+  } finally { flushing = false; save(); render(); }
+  if (queueOf().length) setTimeout(flush, 3000);
+}
+function setData(c, d){ if (isStudent()) S.student.data = d; else c.kid.data = d; save(); }
+function handleAuth(e, c){
+  if (e.status !== 403) return;
+  if (isStudent() && e.body?.revoked) { toast('Máy này không còn quyền. Hãy dùng mã chuyển máy.'); }
+  if (!isStudent() && c?.kid) { c.kid.status = e.body?.pending ? 'pending' : 'revoked'; save(); }
+}
+async function refresh(force){
+  const c = cur(); if (!c) return pollKids();
+  if (queueOf().length) return flush();
+  try {
+    const r = await call('GET', `/s/${c.code}?rev=${force ? 0 : (c.data?.rev || 0)}`, null, c.token);
+    if (r.data && !queueOf().length) { setData(c, r.data); render(); }
+    setSync('ok');
+  } catch (e) { handleAuth(e, c); setSync('off'); if (e.status === 403) render(); }
+}
+// Chờ dài: máy chủ giữ kết nối tới 20 giây, có thay đổi là trả ngay.
+async function loop(){
+  clearTimeout(pollTimer);
+  if (document.hidden || !S?.role) return;
+  const c = cur();
+  if (!c) { await pollKids(); pollTimer = setTimeout(loop, 8000); return; }
+  if (queueOf().length) { await flush(); pollTimer = setTimeout(loop, 1500); return; }
+  pollAbort = new AbortController();
+  try {
+    const r = await fetch(`${API}/s/${c.code}?rev=${c.data?.rev || 0}&wait=20`, { headers: { 'x-token': c.token }, signal: pollAbort.signal });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) { setSync('ok'); if (j.data && !queueOf().length && cur()?.code === c.code) { setData(c, j.data); render(); } }
+    else { handleAuth({ status: r.status, body: j }, c); setSync('off'); if (r.status === 403) render(); }
+  } catch (e) { if (e.name === 'AbortError') return; setSync('off'); pollTimer = setTimeout(loop, 6000); return; }
+  if (!isStudent()) pollKids();
+  pollTimer = setTimeout(loop, 300);
+}
+function restartLoop(){ pollAbort?.abort(); clearTimeout(pollTimer); loop(); }
+async function pollKids(){ // phụ huynh: con nào còn chờ duyệt thì hỏi lại
+  for (const k of (S?.kids || []).filter(k => k.status === 'pending')) {
+    try { const r = await call('GET', `/s/${k.code}`, null, k.token || S.token); k.status = 'approved'; k.data = r.data; if (!S.sel || !S.kids.find(x => x.code === S.sel && x.status === 'approved')) S.sel = k.code; save(); render(); toast('Đã được ' + r.data.name + ' đồng ý'); restartLoop(); }
+    catch (e) { if (e.status === 403 && !e.body?.pending) { k.status = 'revoked'; save(); render(); } }
+  }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { refresh(); restartLoop(); } });
+addEventListener('online', () => { flush(); restartLoop(); });
+
+// ---------- Hiển thị ----------
+function render(){
+  const app = $('#app');
+  if (!S?.role) { $('#nav').classList.add('hide'); app.innerHTML = welcomeHTML(); return; }
+  $('#nav').classList.remove('hide');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === ui.tab));
+  $('#moreLabel').textContent = isStudent() ? 'Cá nhân' : 'Các con';
+  const c = cur(), d = c?.data;
+  const pend = isStudent() ? (d?.links || []).filter(l => l.status === 'pending').length : 0;
+  const mb = $('#moreBadge'); pend ? mb.setAttribute('data-n', pend) : mb.removeAttribute('data-n');
+  let h = `<div class="top"><h1>${esc(isStudent() ? (d?.name || '') + (d?.className ? ' · lớp ' + d.className : '') : (S.label || 'Phụ huynh'))}</h1><span id="sync" class="sync ${ui.sync}" title="Đồng bộ"></span></div>`;
+  if (!isStudent()) h += kidsBar();
+  if (isStudent() && pend) h += pendingHTML(d);
+  if (!c) { h += noKidHTML(); app.innerHTML = h; return; }
+  h += ({ home: homeHTML, week: weekHTML, tasks: tasksHTML, more: isStudent() ? meHTML : kidsHTML })[ui.tab](c);
+  app.innerHTML = h;
+}
+function kidsBar(){
+  const ks = S.kids || []; if (!ks.length) return '';
+  return '<div class="kids">' + ks.map(k => `<button class="kid ${k.status !== 'approved' ? 'wait' : ''} ${cur()?.code === k.code ? 'on' : ''}" data-kid="${esc(k.code)}">${esc(k.data?.name || ('Mã ' + k.code))}${k.status === 'pending' ? ' · chờ duyệt' : k.status === 'revoked' ? ' · đã gỡ' : ''}</button>`).join('') + '<button class="kid" data-do="addKid">＋ Thêm con</button></div>';
+}
+function noKidHTML(){
+  const p = (S.kids || []).find(k => k.status === 'pending');
+  if (p) return `<div class="sheet"><h2 style="margin-top:0">Đang chờ con đồng ý</h2><p>Nhờ con mở app Thời khoá biểu và bấm <b>Đồng ý</b>. Màn hình này tự cập nhật.</p><p class="small">Mã đã nhập: ${esc(p.code)}</p><button class="btn line" data-do="removeKid" data-code="${esc(p.code)}">Huỷ, nhập lại mã</button></div>`;
+  return `<div class="sheet"><p>Nhập mã 8 số trong app của con để xem lịch học.</p><button class="btn" data-do="addKid">Kết nối với con</button></div>`;
+}
+function pendingHTML(d){
+  return (d.links || []).filter(l => l.status === 'pending').map(l => `<div class="notice"><p><b>${esc(l.label)}</b> muốn xem thời khoá biểu và việc học của bạn.</p><div class="row"><button class="btn" data-do="approve" data-id="${esc(l.id)}">Đồng ý</button><button class="btn line" data-do="reject" data-id="${esc(l.id)}">Từ chối</button></div></div>`).join('');
+}
+
+function lessonsHTML(d, w, editable){
+  const list = d.lessons[w] || [];
+  let h = list.length ? list.map((s,i) => `<div class="lesson"><span class="n">${i+1}</span><span class="s">${esc(s)}</span>${editable ? `<button data-do="editLesson" data-w="${w}" data-i="${i}" aria-label="Sửa tiết ${i+1}">Sửa</button>` : ''}</div>`).join('')
+    : `<div class="empty">${editable ? 'Chưa có tiết nào.' : 'Không có tiết học.'}</div>`;
+  if (editable) h += `<button class="add" data-do="addLesson" data-w="${w}">＋ Thêm tiết</button>`;
+  return h;
+}
+function extrasHTML(d, w, editable, soonFor){
+  const list = d.extras[w] || [];
+  const now = new Date(), mins = now.getHours()*60 + now.getMinutes();
+  let h = list.map(e => { const st = e.start ? +e.start.slice(0,2)*60 + +e.start.slice(3) : -1, soon = soonFor && st >= mins && st - mins <= 60;
+    return `<div class="extra ${soon ? 'soon' : ''}"><div class="t">${esc(e.start || '--:--')}<small>${esc(e.end ? 'đến ' + e.end : '')}</small></div><div class="b"><b>${esc(e.name)}</b>${e.place ? `<span>${esc(e.place)}</span>` : ''}${soon ? `<span><br>Sắp bắt đầu, còn ${st - mins} phút</span>` : ''}</div>${editable ? `<button class="add" style="padding:0 4px" data-do="editExtra" data-w="${w}" data-id="${esc(e.id)}">Sửa</button>` : ''}</div>`; }).join('');
+  if (!list.length) h = `<div class="empty">Không có học thêm.</div>`;
+  if (editable) h += `<button class="add" data-do="addExtra" data-w="${w}">＋ Thêm buổi học thêm</button>`;
+  return h;
+}
+function taskRow(t, editable){
+  return `<div class="task ${t.done ? 'done' : ''}"><input type="checkbox" ${t.done ? 'checked' : ''} ${editable ? '' : 'disabled'} data-do="toggle" data-id="${esc(t.id)}" aria-label="Đã xong"><div class="c"><p>${esc(t.content)}</p><div class="m"><span class="kind k-${esc(t.kind)}">${esc(KIND[t.kind] || 'Việc')}</span>${esc(dayWord(t.day))}${t.from ? ' · ' + esc(t.from) + ' nhắc' : ''}</div></div>${editable ? `<button class="edit" data-do="editTask" data-id="${esc(t.id)}" aria-label="Sửa">Sửa</button>` : ''}</div>`;
+}
+
+function homeHTML(c){
+  const d = c.data, day = addDays(ui.homeDay), w = wd(day), key = ymd(day);
+  const tasks = d.tasks.filter(t => t.day === key).sort((a,b) => a.done - b.done);
+  const late = ui.homeDay === 0 ? d.tasks.filter(t => !t.done && t.day < key) : [];
+  let h = `<div class="seg"><button data-home="0" class="${ui.homeDay === 0 ? 'on' : ''}">Hôm nay</button><button data-home="1" class="${ui.homeDay === 1 ? 'on' : ''}">Ngày mai</button></div>`;
+  h += `<div class="sheet"><div class="dayhead"><span class="big">${DAYS[w]}</span><span class="date">${dmy(key)}</span></div>`;
+  h += `<h2 style="margin-top:0">Ở trường</h2>` + lessonsHTML(d, w, false);
+  h += `<h2>Học thêm</h2>` + extrasHTML(d, w, false, ui.homeDay === 0);
+  h += `<h2>Việc cần làm</h2>` + (tasks.length ? tasks.map(t => taskRow(t, c.canEdit)).join('') : `<div class="empty">Không có việc nào.</div>`);
+  if (late.length) h += `<h2 style="color:var(--red)">Còn nợ từ trước</h2>` + late.map(t => taskRow(t, c.canEdit)).join('');
+  h += c.canEdit ? `<button class="add" data-do="addTask" data-day="${key}">＋ Thêm việc</button>` : `<button class="add" data-do="remind" data-day="${key}">＋ Gửi lời nhắc cho con</button>`;
+  h += `</div>`;
+  if (c.canEdit && !d.lessons.some(l => l.length) && !d.extras.some(l => l.length)) h += `<div class="notice"><p>Lịch còn trống. Vào <b>Cả tuần</b> để nhập các tiết học.</p><button class="btn" data-tab="week">Nhập lịch học</button></div>`;
+  return h;
+}
+function weekHTML(c){
+  const d = c.data, w = ui.weekDay, today = wd(new Date());
+  let h = '<div class="days">' + SHORT.map((s,i) => `<button data-wday="${i}" class="${i === w ? 'on' : ''} ${i === today ? 'today' : ''}">${s}<small>${d.lessons[i].length || ''}${d.extras[i].length ? '+' + d.extras[i].length : ''}</small></button>`).join('') + '</div>';
+  h += `<div class="sheet"><div class="dayhead"><span class="big">${DAYS[w]}</span></div><h2 style="margin-top:0">Ở trường</h2>${lessonsHTML(d, w, c.canEdit)}<h2>Học thêm</h2>${extrasHTML(d, w, c.canEdit, false)}</div>`;
+  return h;
+}
+function tasksHTML(c){
+  const d = c.data, t0 = ymd(new Date()), t1 = ymd(addDays(1));
+  const F = { today: ['Hôm nay', t => t.day === t0], tomorrow: ['Ngày mai', t => t.day === t1], open: ['Chưa xong', t => !t.done], done: ['Đã xong', t => t.done], all: ['Tất cả', () => true] };
+  const list = d.tasks.filter(F[ui.filter][1]).sort((a,b) => ui.filter === 'done' ? b.day.localeCompare(a.day) : a.day.localeCompare(b.day));
+  let h = '<div class="chips">' + Object.entries(F).map(([k,[n]]) => `<button class="chip ${ui.filter === k ? 'on' : ''}" data-filter="${k}">${n}</button>`).join('') + '</div>';
+  h += c.canEdit ? `<button class="btn" data-do="addTask" style="margin:6px 0 4px">＋ Thêm việc</button>` : `<button class="btn" data-do="remind" style="margin:6px 0 4px">＋ Gửi lời nhắc cho con</button>`;
+  h += `<div class="sheet">` + (list.length ? list.map(t => taskRow(t, c.canEdit)).join('') : `<div class="empty">Không có việc nào ở mục này.</div>`) + `</div>`;
+  return h;
+}
+function meHTML(c){
+  const d = c.data, links = (d.links || []).filter(l => l.status === 'approved');
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  let h = `<div class="sheet"><h2 style="margin-top:0">Mã để bố mẹ kết nối</h2><div class="code">${esc(c.code.slice(0,4) + ' ' + c.code.slice(4))}</div><p class="small">Bố mẹ nhập mã này trong app, bạn bấm Đồng ý thì bố mẹ mới xem được.</p>
+    <h2>Người đang xem lịch của bạn</h2>${links.length ? links.map(l => `<div class="list-item"><b>${esc(l.label)}</b><button data-do="reject" data-id="${esc(l.id)}">Gỡ</button></div>`).join('') : '<div class="empty">Chưa có ai.</div>'}</div>`;
+  h += `<div class="sheet"><h2 style="margin-top:0">Thông báo</h2>`;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) h += ios && !standalone ? `<p>Để nhận thông báo trên iPhone: bấm nút <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>, rồi mở app từ màn hình chính.</p>` : `<p class="small">Trình duyệt này chưa hỗ trợ thông báo.</p>`;
+  else h += d.hasPush ? `<p>Đang bật: nhắc 20:00 việc ngày mai, 30 phút trước học thêm, khi bố mẹ gửi lời nhắc.</p><button class="btn line" data-do="pushOff">Tắt thông báo</button>` : `<p>Nhắc 20:00 việc ngày mai, 30 phút trước học thêm, và khi bố mẹ gửi lời nhắc.</p><button class="btn" data-do="pushOn">Bật thông báo</button>`;
+  h += `</div><div class="sheet"><h2 style="margin-top:0">Lịch điện thoại</h2><p class="small">Học thêm và ngày kiểm tra tự hiện trong lịch của điện thoại, tự cập nhật khi bạn sửa.</p><div class="row"><a class="btn ghost" style="text-align:center;text-decoration:none" href="webcal://${location.host}/api/cal/${esc(d.calToken)}.ics">Lịch iPhone</a><a class="btn ghost" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent('webcal://' + location.host + '/api/cal/' + d.calToken + '.ics')}">Google Lịch</a></div></div>`;
+  h += `<div class="sheet"><h2 style="margin-top:0">Tên và lớp</h2><p><b>${esc(d.name)}</b>${d.className ? ' · lớp ' + esc(d.className) : ''}</p><button class="btn line" data-do="profile">Sửa tên, lớp</button>
+    <h2>Đổi sang máy khác</h2><p class="small">Tạo mã chuyển máy rồi nhập trên máy mới. Máy này sẽ không dùng được nữa. Nếu mất máy, nhờ bố mẹ tạo mã trong app của bố mẹ.</p><button class="btn line" data-do="handover">Tạo mã chuyển máy</button>
+    <h2>Mã khôi phục</h2><p class="small">Dùng khi mất máy mà chưa kết nối bố mẹ. Chụp lại hoặc ghi ra giấy.</p>${S.student.recovery ? `<div class="code" style="font-size:22px">${esc(S.student.recovery.replace(/(.{4})(?=.)/g,'$1-'))}</div>` : ''}<button class="btn line" data-do="newRecovery" style="margin-top:8px">Tạo mã khôi phục mới</button></div>`;
+  if (!standalone) h += `<div class="notice"><p>Thêm app ra màn hình chính để mở nhanh như app thật${ios ? ': bấm <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>.' : '.'}</p>${deferredInstall ? '<button class="btn" data-do="install">Cài lên màn hình chính</button>' : ''}</div>`;
+  return h;
+}
+function kidsHTML(){
+  let h = `<div class="sheet"><h2 style="margin-top:0">Các con</h2>` + (S.kids || []).map(k => `<div class="list-item"><b>${esc(k.data?.name || 'Mã ' + k.code)}<br><span class="small">${k.status === 'approved' ? 'Đang xem' : k.status === 'pending' ? 'Chờ con đồng ý' : 'Con đã gỡ máy này'}</span></b>${k.status === 'approved' ? `<button style="background:var(--tim-2);color:var(--tim)" data-do="kidHandover" data-code="${esc(k.code)}">Con đổi máy</button>` : ''}<button data-do="removeKid" data-code="${esc(k.code)}">Bỏ</button></div>`).join('') + `<button class="add" data-do="addKid">＋ Thêm con</button></div>`;
+  h += `<div class="sheet"><h2 style="margin-top:0">Tên gọi của bạn</h2><p>Con thấy bạn là <b>${esc(S.label || 'Phụ huynh')}</b>.</p><p class="small">Đổi tên gọi thì kết nối lại với con.</p></div>`;
+  h += `<div class="sheet"><h2 style="margin-top:0">Thông báo</h2><p class="small">Thông báo được gửi tới máy của con. Bạn có thể xem mọi thứ tại đây bất cứ lúc nào.</p></div>`;
+  return h;
+}
+
+function welcomeHTML(){
+  return `<div class="welcome"><div class="mark"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
+  <h1>Thời khoá biểu</h1><p>Ngày mai học gì, học thêm lúc nào, bài nào chưa làm. Bố mẹ xem cùng con.</p>
+  <button class="btn" data-do="startStudent">Tôi là học sinh</button>
+  <button class="btn ghost" data-do="startParent">Tôi là phụ huynh</button>
+  <button class="add" data-do="claim" style="margin:14px auto 0">Tôi đã dùng app trên máy khác</button></div>`;
+}
+
+// ---------- Hộp nhập ----------
+function modal(html, onSubmit){
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="sheetbg"><form class="modal" novalidate>${html}<div class="err" id="merr"></div></form></div>`;
+  const bg = root.firstChild, form = bg.firstChild;
+  bg.addEventListener('click', e => { if (e.target === bg) close(); });
+  form.addEventListener('click', e => { if (e.target.closest('[data-close]')) { e.preventDefault(); close(); } });
+  form.addEventListener('submit', async e => {
+    e.preventDefault(); const btn = form.querySelector('[type=submit]'); if (btn) btn.disabled = true;
+    try { const ok = await onSubmit(new FormData(form), e.submitter); if (ok !== false) close(); }
+    catch (er) { $('#merr').textContent = er.message; }
+    finally { if (btn) btn.disabled = false; }
+  });
+  setTimeout(() => form.querySelector('input:not([type=hidden]),textarea')?.focus(), 60);
+  function close(){ root.innerHTML = ''; }
+  return close;
+}
+const field = (label, name, val = '', extra = '') => `<label class="f" for="f_${name}">${label}</label><input class="in" id="f_${name}" name="${name}" value="${esc(val)}" ${extra}>`;
+
+const actions = {
+  startStudent(){
+    modal(`<h3>Chào bạn!</h3>${field('Tên của bạn', 'name', '', 'autocomplete="given-name" required maxlength="60"')}${field('Lớp (không bắt buộc)', 'cls', '', 'maxlength="20" placeholder="VD: 8A"')}<div style="height:12px"></div><button class="btn" type="submit">Bắt đầu</button>`, async f => {
+      const name = f.get('name').trim(); if (!name) throw Error('Nhập tên của bạn');
+      const token = rnd(32);
+      const r = await call('POST', '/student', { name, className: f.get('cls').trim(), token });
+      S = { role: 'student', token, student: { code: r.code, recovery: r.recovery, data: r.data, queue: [] } }; save();
+      ui.tab = 'week'; ui.weekDay = 0; render(); restartLoop();
+      setTimeout(() => modal(`<h3>Mã của bạn</h3><div class="code">${r.code.slice(0,4)} ${r.code.slice(4)}</div><p>Đưa mã này cho bố mẹ để bố mẹ xem lịch cùng bạn. Mã luôn có trong mục <b>Cá nhân</b>.</p><button class="btn" type="submit">Nhập lịch học</button>`, () => true), 100);
+    });
+  },
+  startParent(){ actions.addKid(true); },
+  addKid(first){
+    modal(`<h3>Kết nối với con</h3><p class="small" style="margin-top:-6px">Mã 8 số nằm trong app của con, mục <b>Cá nhân</b>.</p>${field('Mã của con', 'code', '', 'inputmode="numeric" autocomplete="off" maxlength="9" placeholder="1234 5678" required')}${S?.label ? '' : field('Con gọi bạn là', 'label', '', 'maxlength="30" placeholder="VD: Mẹ, Bố, Bà" required')}<div style="height:12px"></div><button class="btn" type="submit">Gửi yêu cầu</button>`, async f => {
+      const code = f.get('code').replace(/\D/g,''); if (code.length !== 8) throw Error('Mã gồm 8 chữ số');
+      const label = S?.label || f.get('label').trim(); if (!label) throw Error('Nhập tên con gọi bạn');
+      if (!S || S.role !== 'parent') S = { role: 'parent', token: rnd(32), label, kids: [], sel: null };
+      if (S.kids.find(k => k.code === code && k.status !== 'revoked')) throw Error('Đã có con này rồi');
+      const r = await call('POST', '/link', { code, label, token: S.token });
+      S.label = label; S.kids = S.kids.filter(k => k.code !== code);
+      S.kids.push({ code, status: r.status, data: r.data || null, queue: [] }); if (r.status === 'approved') S.sel = code;
+      save(); render(); restartLoop();
+      if (r.status !== 'approved') toast('Đã gửi. Nhờ con mở app và bấm Đồng ý.');
+    });
+  },
+  removeKid(el){ if (!confirm('Bỏ con này khỏi máy?')) return; S.kids = S.kids.filter(k => k.code !== el.dataset.code); if (S.sel === el.dataset.code) S.sel = null; if (!S.kids.length && !confirm('Giữ tên gọi để kết nối lại?')) S = null; save(); render(); restartLoop(); },
+  claim(){
+    modal(`<h3>Chuyển sang máy này</h3><p class="small" style="margin-top:-6px">Nhập mã chuyển máy 6 số (tạo trên máy cũ, hoặc bố mẹ tạo trong app của bố mẹ).</p>${field('Mã chuyển máy', 'pin', '', 'inputmode="numeric" autocomplete="one-time-code" maxlength="6"')}<div style="height:12px"></div><button class="btn" type="submit">Tiếp tục</button><button class="add" data-close style="margin:10px auto 0" onclick="setTimeout(()=>actions.recover(),50)">Không có mã? Dùng mã khôi phục</button>`, async f => {
+      const pin = f.get('pin').replace(/\D/g,''); if (pin.length !== 6) throw Error('Mã gồm 6 chữ số');
+      const token = rnd(32); const r = await call('POST', '/claim', { pin, token });
+      S = { role: 'student', token, student: { code: r.code, recovery: '', data: r.data, queue: [] } }; save(); ui.tab = 'home'; render(); restartLoop(); toast('Đã chuyển sang máy này');
+    });
+  },
+  recover(){
+    modal(`<h3>Dùng mã khôi phục</h3>${field('Mã học sinh (8 số)', 'code', '', 'inputmode="numeric" maxlength="9"')}${field('Mã khôi phục (12 ký tự)', 'rec', '', 'autocapitalize="characters" autocomplete="off" maxlength="16"')}<div style="height:12px"></div><button class="btn" type="submit">Khôi phục</button>`, async f => {
+      const token = rnd(32); const r = await call('POST', '/recover', { code: f.get('code').replace(/\D/g,''), recovery: f.get('rec'), token });
+      S = { role: 'student', token, student: { code: r.code, recovery: f.get('rec').replace(/[\s-]/g,'').toUpperCase(), data: r.data, queue: [] } }; save(); ui.tab = 'home'; render(); restartLoop(); toast('Đã khôi phục');
+    });
+  },
+  approve(el){ act({ t: 'link.approve', id: el.dataset.id }); toast('Đã đồng ý'); },
+  reject(el){ if (confirm('Gỡ người này? Máy đó sẽ không xem được nữa.')) act({ t: 'link.remove', id: el.dataset.id }); },
+
+  addLesson(el){ lessonForm(+el.dataset.w, -1); },
+  editLesson(el){ lessonForm(+el.dataset.w, +el.dataset.i); },
+  addExtra(el){ extraForm(+el.dataset.w, null); },
+  editExtra(el){ extraForm(+el.dataset.w, el.dataset.id); },
+  addTask(el){ taskForm(null, el.dataset.day); },
+  editTask(el){ taskForm(el.dataset.id); },
+  toggle(el){ act({ t: 'task.done', id: el.dataset.id, done: el.checked }); },
+  remind(el){
+    const d = el.dataset.day || ymd(addDays(1));
+    modal(`<h3>Nhắc ${esc(cur().data.name)}</h3><label class="f" for="f_c">Lời nhắc</label><textarea class="in" id="f_c" name="c" rows="3" maxlength="300" placeholder="VD: Nhớ mang áo khoác"></textarea>${field('Ngày', 'day', d, 'type="date"')}<div style="height:12px"></div><button class="btn" type="submit">Gửi lời nhắc</button>`, f => {
+      const c = f.get('c').trim(); if (!c) throw Error('Viết lời nhắc'); act({ t: 'reminder.add', id: 'r' + uid(), content: c, day: f.get('day') || d }); toast('Đã gửi lời nhắc');
+    });
+  },
+  profile(){
+    const d = cur().data;
+    modal(`<h3>Tên và lớp</h3>${field('Tên', 'name', d.name, 'maxlength="60"')}${field('Lớp', 'cls', d.className, 'maxlength="20"')}<div style="height:12px"></div><button class="btn" type="submit">Lưu</button>`, f => {
+      const name = f.get('name').trim(); if (!name) throw Error('Cần tên'); act({ t: 'profile', name, className: f.get('cls').trim() });
+    });
+  },
+  async handover(){ await showPin(S.student.code, S.token, true); },
+  async kidHandover(el){ const k = S.kids.find(k => k.code === el.dataset.code); await showPin(k.code, k.token || S.token, false); },
+  async newRecovery(){
+    if (!confirm('Tạo mã khôi phục mới? Mã cũ sẽ hết hiệu lực.')) return;
+    try { const r = await call('POST', `/s/${S.student.code}/recovery`, {}, S.token); S.student.recovery = r.recovery; save(); render(); } catch (e) { toast(e.message); }
+  },
+  async pushOn(){
+    try {
+      const perm = await Notification.requestPermission(); if (perm !== 'granted') return toast('Bạn chưa cho phép thông báo');
+      const reg = await navigator.serviceWorker.ready;
+      const { key } = await call('GET', '/push-key'); if (!key) return toast('Máy chủ chưa bật thông báo');
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(key) });
+      await call('POST', `/s/${S.student.code}/push`, { sub: sub.toJSON() }, S.token);
+      S.student.data.hasPush = true; save(); render(); toast('Đã bật thông báo');
+    } catch (e) { toast(e.message || 'Không bật được thông báo'); }
+  },
+  async pushOff(){
+    try { const reg = await navigator.serviceWorker.ready; const s = await reg.pushManager.getSubscription(); await s?.unsubscribe(); } catch {}
+    try { await call('POST', `/s/${S.student.code}/push`, { sub: null }, S.token); S.student.data.hasPush = false; save(); render(); } catch (e) { toast(e.message); }
+  },
+  install(){ deferredInstall?.prompt(); deferredInstall = null; },
+};
+async function showPin(code, token, self){
+  try {
+    const r = await call('POST', `/s/${code}/handover`, {}, token);
+    modal(`<h3>Mã chuyển máy</h3><div class="code">${r.pin}</div><p>${self ? 'Trên máy mới' : 'Trên máy mới của con'}: mở app → <b>Tôi đã dùng app trên máy khác</b> → nhập mã này. Mã dùng một lần, hết hạn sau 10 phút.</p>${self ? '<p class="small">Sau khi chuyển, máy này sẽ không sửa được lịch nữa.</p>' : ''}<button class="btn" type="submit">Xong</button>`, () => true);
+  } catch (e) { toast(e.message); }
+}
+function b64u(s){ const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+
+function lessonForm(w, i){
+  const d = cur().data, list = [...d.lessons[w]], val = i >= 0 ? list[i] : '';
+  modal(`<h3>${i >= 0 ? 'Sửa tiết ' + (i+1) : 'Thêm tiết ' + (list.length+1)} · ${DAYS[w]}</h3>${field('Môn', 'name', val, 'maxlength="40" list="subjects" autocomplete="off"')}<datalist id="subjects">${['Toán','Ngữ văn','Tiếng Anh','Vật lý','Hoá học','Sinh học','Lịch sử','Địa lý','GDCD','Tin học','Công nghệ','Thể dục','Âm nhạc','Mỹ thuật','KHTN','Lịch sử và Địa lý','Hoạt động trải nghiệm','Chào cờ','Sinh hoạt lớp'].map(s => `<option value="${s}">`).join('')}</datalist>
+    <div style="height:12px"></div><button class="btn" type="submit">Lưu</button>${i >= 0 ? `<div class="row" style="margin-top:10px"><button class="btn line" type="submit" name="act" value="up" ${i === 0 ? 'disabled' : ''}>Lên trên</button><button class="btn line" type="submit" name="act" value="down" ${i === list.length-1 ? 'disabled' : ''}>Xuống dưới</button></div><button class="btn danger" type="submit" name="act" value="del" style="margin-top:10px">Xoá tiết này</button>` : ''}`, (f, sub) => {
+    const a = sub?.value, name = f.get('name').trim();
+    if (a === 'del') list.splice(i, 1);
+    else if (a === 'up') [list[i-1], list[i]] = [name || list[i], list[i-1]];
+    else if (a === 'down') [list[i+1], list[i]] = [name || list[i], list[i+1]];
+    else { if (!name) throw Error('Nhập tên môn'); if (i >= 0) list[i] = name; else list.push(name); }
+    act({ t: 'lessons.set', w, list });
+  });
+}
+function extraForm(w, id){
+  const e = id ? cur().data.extras[w].find(x => x.id === id) : { name: '', place: '', start: '', end: '' };
+  modal(`<h3>${id ? 'Sửa' : 'Thêm'} buổi học thêm</h3>${field('Môn / hoạt động', 'name', e.name, 'maxlength="60" placeholder="VD: Toán nâng cao"')}${field('Địa điểm', 'place', e.place, 'maxlength="100" placeholder="VD: Nhà cô Lan, ngõ 12"')}<div class="row"><div>${field('Bắt đầu', 'start', e.start, 'type="time"')}</div><div>${field('Kết thúc', 'end', e.end, 'type="time"')}</div></div><label class="f" for="f_w">Thứ</label><select class="in" id="f_w" name="w">${DAYS.map((n,i) => `<option value="${i}" ${i === w ? 'selected' : ''}>${n}</option>`).join('')}</select>
+    <div style="height:12px"></div><button class="btn" type="submit">Lưu</button>${id ? `<button class="btn danger" type="submit" name="act" value="del" style="margin-top:10px">Xoá buổi này</button>` : ''}`, (f, sub) => {
+    if (sub?.value === 'del') return act({ t: 'extra.del', w, id });
+    const item = { id: id || 'e' + uid(), name: f.get('name').trim(), place: f.get('place').trim(), start: f.get('start'), end: f.get('end') };
+    if (!item.name) throw Error('Nhập tên môn hoặc hoạt động');
+    if (!item.start || !item.end) throw Error('Nhập giờ bắt đầu và kết thúc');
+    if (item.end <= item.start) throw Error('Giờ kết thúc phải sau giờ bắt đầu');
+    act({ t: 'extra.upsert', w: +f.get('w'), from: w, item });
+  });
+}
+function taskForm(id, day){
+  const t = id ? cur().data.tasks.find(x => x.id === id) : { kind: 'homework', content: '', day: day || ymd(addDays(1)) };
+  const rem = t.kind === 'reminder';
+  modal(`<h3>${id ? 'Sửa việc' : 'Thêm việc'}</h3>${rem ? `<p class="small">Lời nhắc của ${esc(t.from || 'phụ huynh')}</p>` : `<div class="chips">${['homework','test','prepare','other'].map(k => `<label class="chip ${t.kind === k ? 'on' : ''}"><input type="radio" name="kind" value="${k}" ${t.kind === k ? 'checked' : ''} hidden>${KIND[k]}</label>`).join('')}</div>`}
+    <label class="f" for="f_c">Nội dung</label><textarea class="in" id="f_c" name="c" rows="3" maxlength="300" placeholder="VD: Bài 1–5 trang 45">${esc(t.content)}</textarea>
+    ${field('Ngày', 'day', t.day, 'type="date"')}<div class="chips" style="margin-top:8px"><button type="button" class="chip" data-setday="0">Hôm nay</button><button type="button" class="chip" data-setday="1">Ngày mai</button><button type="button" class="chip" data-setday="2">Ngày kia</button></div>
+    <div style="height:12px"></div><button class="btn" type="submit">Lưu</button>${id ? `<button class="btn danger" type="submit" name="act" value="del" style="margin-top:10px">Xoá việc này</button>` : ''}`, (f, sub) => {
+    if (sub?.value === 'del') return act({ t: 'task.del', id });
+    const content = f.get('c').trim(); if (!content) throw Error('Viết nội dung việc');
+    const dd = f.get('day'); if (!dd) throw Error('Chọn ngày');
+    act({ t: 'task.upsert', task: { id: id || 't' + uid(), kind: rem ? 'reminder' : (f.get('kind') || 'homework'), content, day: dd, done: !!t.done } });
+  });
+  const form = $('.modal');
+  form.addEventListener('change', e => { if (e.target.name === 'kind') form.querySelectorAll('label.chip').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); });
+  form.addEventListener('click', e => { const b = e.target.closest('[data-setday]'); if (b) form.querySelector('[name=day]').value = ymd(addDays(+b.dataset.setday)); });
+}
+
+// ---------- Sự kiện ----------
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-do],[data-tab],[data-home],[data-wday],[data-filter],[data-kid]');
+  if (!el || el.closest('.modal')) return;
+  if (el.dataset.tab) { ui.tab = el.dataset.tab; render(); scrollTo(0,0); return; }
+  if (el.dataset.home) { ui.homeDay = +el.dataset.home; render(); return; }
+  if (el.dataset.wday) { ui.weekDay = +el.dataset.wday; render(); return; }
+  if (el.dataset.filter) { ui.filter = el.dataset.filter; render(); return; }
+  if (el.dataset.kid) { S.sel = el.dataset.kid; save(); render(); restartLoop(); refresh(); return; }
+  if (el.dataset.do && el.type !== 'checkbox') actions[el.dataset.do]?.(el);
+});
+document.addEventListener('change', e => { const el = e.target; if (el.dataset?.do === 'toggle' && !el.closest('.modal')) actions.toggle(el); });
+let deferredInstall = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; if (ui.tab === 'more') render(); });
+
+// ---------- Chuyển từ V19 (link cũ mang khoá sang qua phần sau dấu #) ----------
+// Đổi tên miền sau này (nmh-tkb.netlify.app → tkb.nomahubvn.com): trang cũ chuyển khoá sang qua #move=
+function moveLink(host){ const keep = S.role === 'student' ? { role: 'student', token: S.token, student: { code: S.student.code, recovery: S.student.recovery, data: null, queue: S.student.queue } } : { role: 'parent', token: S.token, label: S.label, sel: S.sel, kids: S.kids.map(k => ({ code: k.code, token: k.token, status: k.status, data: null, queue: k.queue })) };
+  return 'https://' + host + '/#move=' + btoa(unescape(encodeURIComponent(JSON.stringify(keep)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function importFromHash(){
+  const mv = location.hash.match(/^#move=([A-Za-z0-9_\-]+)/);
+  if (mv) { history.replaceState(null, '', location.pathname); if (!S?.role) { try { const j = JSON.parse(decodeURIComponent(escape(atob(mv[1].replace(/-/g,'+').replace(/_/g,'/'))))); if (j.role === 'student' || j.role === 'parent') { S = j; save(); } } catch {} } return; }
+  const m = location.hash.match(/^#v19=([A-Za-z0-9_\-]+)/); if (!m) return;
+  history.replaceState(null, '', location.pathname);
+  try {
+    const j = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
+    if (S?.role) return toast('Máy này đã dùng app mới');
+    if (j.role === 'student' && /^\d{8}$/.test(j.code) && j.token) S = { role: 'student', token: j.token, student: { code: j.code, recovery: '', data: null, queue: [] } };
+    else if (j.role === 'parent' && Array.isArray(j.kids)) S = { role: 'parent', token: rnd(32), label: 'Phụ huynh', kids: j.kids.filter(k => /^\d{8}$/.test(k.code) && k.token).map(k => ({ code: k.code, token: k.token, status: 'approved', data: null, queue: [] })), sel: null };
+    save();
+  } catch {}
+}
+async function boot(){
+  importFromHash();
+  if (S?.role === 'student' && !S.student.data) { try { S.student.data = (await call('GET', `/s/${S.student.code}`, null, S.token)).data; save(); toast('Đã chuyển dữ liệu từ bản cũ'); } catch (e) { toast('Chưa chuyển được dữ liệu: ' + e.message); S = null; save(); } }
+  if (S?.role === 'parent') for (const k of S.kids.filter(k => !k.data)) { try { k.data = (await call('GET', `/s/${k.code}`, null, k.token || S.token)).data; } catch (e) { k.status = e.body?.pending ? 'pending' : 'revoked'; } save(); }
+  render(); refresh(); restartLoop(); flush();
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+boot();
+</script>
+</body>
+</html>

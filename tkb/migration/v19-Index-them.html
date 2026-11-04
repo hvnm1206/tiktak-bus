@@ -1,0 +1,23 @@
+<!-- ===== DÁN VÀO FILE "Index" CỦA V19, NGAY TRƯỚC </body> ===== -->
+<div id="v2bar" style="position:fixed;left:12px;right:12px;bottom:84px;z-index:99;background:#4B34C4;color:#fff;border-radius:14px;padding:14px;font:15px/1.4 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.18);display:none">
+  <b>Thời khoá biểu có bản mới</b><br>Mở nhanh hơn, có thông báo nhắc việc. Dữ liệu của bạn được giữ nguyên.
+  <button id="v2go" style="display:block;width:100%;margin-top:10px;border:0;border-radius:10px;padding:12px;background:#fff;color:#4B34C4;font-weight:700;font-size:15px">Chuyển sang bản mới</button>
+</div>
+<script>
+(function () {
+  var role = localStorage.getItem('tkb_role_v2') || '', p = null;
+  var sc = localStorage.getItem('tkb_student_code'), ot = localStorage.getItem('tkb_owner_token');
+  if (role !== 'parent' && /^\d{8}$/.test(sc || '') && ot) p = { role: 'student', code: sc, token: ot };
+  if (!p) {
+    var kids = []; try { kids = JSON.parse(localStorage.getItem('tkb_children_v2') || '[]'); } catch (e) {}
+    kids = kids.map(function (c) { return { code: c, token: localStorage.getItem('tkb_parent_token_' + c) }; }).filter(function (k) { return /^\d{8}$/.test(k.code) && k.token; });
+    if (kids.length) p = { role: 'parent', kids: kids };
+  }
+  var bar = document.getElementById('v2bar'); bar.style.display = 'block';
+  document.getElementById('v2go').onclick = function () {
+    var url = 'https://nmh-tkb.netlify.app/';
+    if (p) url += '#v19=' + btoa(unescape(encodeURIComponent(JSON.stringify(p)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    window.open(url, '_blank');
+  };
+})();
+</script>
