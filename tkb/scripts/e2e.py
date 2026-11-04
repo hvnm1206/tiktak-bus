@@ -11,7 +11,6 @@ with sync_playwright() as p:
     def phone():
         c = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True, locale='vi-VN', timezone_id='Asia/Ho_Chi_Minh')
         c.route('**/fonts.g*/**', lambda r: r.abort())
-        c.route('**/.netlify/scripts/hud*', lambda r: r.abort())  # nhãn Netlify che thanh dưới (anh Hải tắt trong cài đặt)
         pg = c.new_page(); pg.on('dialog', lambda d: d.accept()); return c, pg
     sc, s = phone(); pc, pa = phone()
 

@@ -30,6 +30,7 @@ Cách kiểm:
 | 19 | Không cần đăng nhập Google | ĐẠT | Mọi lượt e2e chạy trên trình duyệt không đăng nhập |
 
 ## Còn tồn tại
-- **Nhãn "Powered by Netlify"** che nút "Việc học" ở thanh dưới. Tắt ở Netlify → nmh-tkb → Project configuration → Netlify badge (thao tác tay). Kịch bản e2e đang tạm chặn nhãn này.
+- ~~Nhãn "Powered by Netlify" che nút "Việc học"~~ → đã xử lý bằng `netlify/edge-functions/page.js` (bỏ đoạn mã nhãn khỏi trang). e2e live 13/13 khi không còn chặn nhãn trong test.
+- e2e đôi khi kẹt ở bước phụ huynh kết nối trong vòng 1 giờ sau khi chạy `live-rate.mjs`: TC10 đã khoá một IP ra mạng của máy test (đúng thiết kế). Chạy e2e trước `live-rate.mjs`.
 - Thông báo đẩy và "Thêm vào MH chính" chưa thử trên iPhone/Android thật.
-- Tên miền `tkb.nomahubvn.com` chưa gắn. Đổi tên miền sau khi đã có người dùng thì cần dẫn qua `#move=` (đã có sẵn trong app).
+- Tên miền: dùng `nmh-tkb.netlify.app` như các app NMH khác. Gắn `tkb.nomahubvn.com` sau, dẫn người dùng qua `#move=` (đã có sẵn trong app).
